@@ -28,7 +28,7 @@ namespace ndarray {
             _data = std::unique_ptr<T>(new T[matrix._size]);
             std::memcpy(_data.get(), matrix._data.get(), matrix._size * sizeof(T));
         }
-        Matrix(Matrix&& matrix) noexcept : _rows(matrix._rows), _cols(matrix._cols), _size(matrix._size) {
+        Matrix(Matrix<T>&& matrix) noexcept : _rows(matrix._rows), _cols(matrix._cols), _size(matrix._size) {
             _data = std::move(matrix._data);
             matrix.clear();
         }
