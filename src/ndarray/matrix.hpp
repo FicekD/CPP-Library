@@ -7,6 +7,7 @@
 #include <cstring>
 #include <cmath>
 #include <numeric>
+#include <format>
 
 namespace ndarray {
     enum Dim {
@@ -44,7 +45,21 @@ namespace ndarray {
             std::memcpy(_data.get(), data.data(), _size * sizeof(T));
         }
 
-        static Matrix<T> eye(std::size_t dim_size, int k = 0);
+        static Matrix<T> eye(std::size_t dim_size, int k = 0) {
+            size_t abs_k = std::abs(k);
+            if (abs_k > dim_size)
+                throw std::invalid_argument("k out of eye matrix dimensions");
+            Matrix<T> ret = Matrix(dim_size, dim_size);
+            if (k >= 0)
+                for (size_t i = 0; i < dim_size - abs_k; i++) {
+                    ret.at(i, i + abs_k) = T(1);
+                }
+            else
+                for (size_t i = 0; i < dim_size - abs_k; i++) {
+                    ret.at(i + abs_k, i) = T(1);
+                }
+            return ret;
+        }
 
         std::size_t rows() const { return _rows; }
         std::size_t cols() const { return _cols; }
@@ -80,7 +95,12 @@ namespace ndarray {
             return at(row * _cols + col);
         }
 
-        void reshape(int rows, int cols);
+        void reshape(std::size_t rows, std::size_t cols) {
+            if (rows * cols != _size)
+                throw std::invalid_argument(std::format("Reshape missmatch [{}x{}] -> [{}x{}]", _rows, _cols, rows, cols));
+            _rows = rows;
+            _cols = cols;
+        }
 
         Matrix<T> sub_matrix(std::size_t row_0, std::size_t row_1, std::size_t col_0, std::size_t col_1) const {
             if (row_1 < row_0 || col_1 < col_0)
@@ -331,18 +351,29 @@ namespace ndarray {
         }
 #pragma endregion LOGICAL_OPS
 
-        T reduce_sum() const;
-            // std::reduce(_data.get(), _data.get() + _size * sizeof(T), T(), [](const T& x0, const T& x1) -> T{ return x0 + x1; });
+        T reduce_sum() const {
+            return std::reduce(_data.get(), _data.get() + _size * sizeof(T), T(0), [](const T& x0, const T& x1) -> T { return x0 + x1; });
+        }
         std::vector<T> reduce_sum_dim(Dim dim) const;
-        T reduce_prod() const;
+        T reduce_prod() const {
+            return std::reduce(_data.get(), _data.get() + _size * sizeof(T), T(1), [](const T& x0, const T& x1) -> T { return x0 * x1; });
+        }
         std::vector<T> reduce_prod_dim(Dim dim) const;
-        T reduce_max() const;
+        T reduce_max() const {
+            return std::reduce(_data.get(), _data.get() + _size * sizeof(T), T(-INFINITY), [](const T& x0, const T& x1) -> T { return x0 > x1 ? x0 : x1; });
+        }
         std::vector<T> reduce_max_dim(Dim dim) const;
-        T reduce_min() const;
+        T reduce_min() const {
+            return std::reduce(_data.get(), _data.get() + _size * sizeof(T), T(INFINITY), [](const T& x0, const T& x1) -> T { return x0 < x1 ? x0 : x1; });
+        }
         std::vector<T> reduce_min_dim(Dim dim) const;
-        bool reduce_any() const;
+        bool reduce_any() const {
+            return std::reduce(_data.get(), _data.get() + _size * sizeof(T), false, [](bool x0, const T& x1) -> T { return x0 || x1 > 0; });
+        }
         std::vector<bool> reduce_any_dim(Dim dim) const;
-        bool reduce_all() const;
+        bool reduce_all() const {
+            return std::reduce(_data.get(), _data.get() + _size * sizeof(T), true, [](bool x0, const T& x1) -> T { return x0 && x1 > 0; });
+        }
         std::vector<bool> reduce_all_dim(Dim dim) const;
 
         Matrix<T> dot(const Matrix<T>& matrix) const;
@@ -350,7 +381,7 @@ namespace ndarray {
         Matrix<T> transpose_copy() const;
         Matrix<T> inverse() const;
 
-        class MatrixIterator : public std::iterator<std::random_access_iterator_tag, T> {
+        class MatrixIterator {
         private:
             Matrix<T>* _mat_ptr;
             std::size_t _ptr;
@@ -358,6 +389,11 @@ namespace ndarray {
             std::size_t _iter_rows, _iter_cols, _iter_size;
             Dim _order;
         public:
+            using difference_type = std::ptrdiff_t;
+            using element_type = T;
+            using pointer = element_type*;
+            using reference = element_type&;
+
             MatrixIterator(Matrix<T>* mat_ptr, Dim order, std::size_t ptr,
                            std::size_t row_start, std::size_t row_end,
                            std::size_t col_start, std::size_t col_end)
