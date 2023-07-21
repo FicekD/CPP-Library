@@ -24,11 +24,11 @@ namespace ndarray {
         std::size_t _size = 0;
     public:
         Matrix() {}
-        Matrix(const Matrix& matrix) : _rows(matrix._rows), _cols(matrix._cols), _size(matrix._size) {
+        Matrix(const Matrix<T>& matrix) : _rows(matrix._rows), _cols(matrix._cols), _size(matrix._size) {
             _data = std::unique_ptr<T>(new T[matrix._size]);
-            std::memcpy(_data, matrix._data, matrix._size * sizeof(T));
+            std::memcpy(_data.get(), matrix._data.get(), matrix._size * sizeof(T));
         }
-        Matrix(Matrix&& matrix) : _rows(matrix._rows), _cols(matrix._cols), _size(matrix._size) {
+        Matrix(Matrix&& matrix) noexcept : _rows(matrix._rows), _cols(matrix._cols), _size(matrix._size) {
             _data = std::move(matrix._data);
             matrix.clear();
         }
@@ -37,11 +37,11 @@ namespace ndarray {
         }
         Matrix(std::size_t rows, std::size_t cols, T* data) : _rows(rows), _cols(cols), _size(cols * rows) {
             _data = std::unique_ptr<T>(new T[_size]);
-            std::memcpy(_data, data, _size * sizeof(T));
+            std::memcpy(_data.get(), data, _size * sizeof(T));
         }
         Matrix(std::size_t rows, std::size_t cols, const std::vector<T>& data) {
             _data = std::unique_ptr<T>(new T[_size]);
-            std::memcpy(_data, data.data(), _size * sizeof(T));
+            std::memcpy(_data.get(), data.data(), _size * sizeof(T));
         }
 
         static Matrix<T> eye(std::size_t dim_size, int k = 0);
@@ -139,7 +139,7 @@ namespace ndarray {
         void operator=(const Matrix<T>& matrix) {
             if (matrix._size != _size)
                 _data = std::unique_ptr<T>(new T[matrix._size]);
-            std::memcpy(_data, matrix._data, matrix._size * sizeof(T));
+            std::memcpy(_data.get(), matrix._data.get(), matrix._size * sizeof(T));
             _size = matrix._size;
             _rows = matrix._rows;
             _cols = matrix._cols;
