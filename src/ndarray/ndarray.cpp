@@ -19,6 +19,9 @@ int main() {
     for (auto& x : x4) {
         std::cout << x << ' ';
     }
+    std::cout << std::endl;
+
+    std::cout << x4.reduce_sum() << std::endl;
 
     return 0;
 }
