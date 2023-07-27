@@ -8,6 +8,7 @@
 #include <cmath>
 #include <numeric>
 #include <format>
+#include <functional>
 
 namespace ndarray {
     enum Dim {
@@ -350,31 +351,81 @@ namespace ndarray {
             return result;
         }
 #pragma endregion LOGICAL_OPS
-
+        template<typename R>
+        Matrix<R> reduce_rows(const std::function<R(const R&, const T&)>& lambda, const R& initializer) const {
+            Matrix<R> result(1, _cols);
+            result.fill(initializer);
+            for (std::size_t row = 0; row < _rows; row++) {
+                for (std::size_t col = 0; col < _cols; col++) {
+                    R& at_col = result.at(col);
+                    at_col = lambda(at_col, this->get(row, col));
+                }
+            }
+            return result;
+        }
+        template<typename R>
+        Matrix<R> reduce_cols(const std::function<R(const R&, const T&)>& lambda, const R& initializer) const {
+            Matrix<R> result(1, _cols);
+            result.fill(initializer);
+            for (std::size_t row = 0; row < _rows; row++) {
+                for (std::size_t col = 0; col < _cols; col++) {
+                    R& at_row = result.at(row);
+                    at_row = lambda(at_row, this->get(row, col));
+                }
+            }
+            return result;
+        }
+        template<typename R>
+        Matrix<R> reduce_dim(const std::function<R(const R&, const T&)>& lambda, Dim dim, const R& initializer) const {
+            if (dim == ROWS) {
+                return reduce_rows<R>(lambda, initializer);
+            }
+            else {
+                return reduce_cols<R>(lambda, initializer);
+            }
+        }
         T reduce_sum() const {
             return std::reduce(_data.get(), _data.get() + _size * sizeof(T), T(0), [](const T& x0, const T& x1) -> T { return x0 + x1; });
         }
-        std::vector<T> reduce_sum_dim(Dim dim) const;
+        Matrix<T> reduce_sum_dim(Dim dim) const {
+            auto reduce_func = [](const T& x0, const T& x1) -> T { return x0 + x1; };
+            return reduce_dim<T>(reduce_func, dim, T(0));
+        }
         T reduce_prod() const {
             return std::reduce(_data.get(), _data.get() + _size * sizeof(T), T(1), [](const T& x0, const T& x1) -> T { return x0 * x1; });
         }
-        std::vector<T> reduce_prod_dim(Dim dim) const;
+        Matrix<T> reduce_prod_dim(Dim dim) const {
+            auto reduce_func = [](const T& x0, const T& x1) -> T { return x0 * x1; };
+            return reduce_dim<T>(reduce_func, dim, T(1));
+        }
         T reduce_max() const {
             return std::reduce(_data.get(), _data.get() + _size * sizeof(T), T(-INFINITY), [](const T& x0, const T& x1) -> T { return x0 > x1 ? x0 : x1; });
         }
-        std::vector<T> reduce_max_dim(Dim dim) const;
+        Matrix<T> reduce_max_dim(Dim dim) const {
+            auto reduce_func = [](const T& x0, const T& x1) -> T { return x0 > x1 ? x0 : x1; };
+            return reduce_dim<T>(reduce_func, dim, T(-INFINITY));
+        }
         T reduce_min() const {
             return std::reduce(_data.get(), _data.get() + _size * sizeof(T), T(INFINITY), [](const T& x0, const T& x1) -> T { return x0 < x1 ? x0 : x1; });
         }
-        std::vector<T> reduce_min_dim(Dim dim) const;
+        Matrix<T> reduce_min_dim(Dim dim) const {
+            auto reduce_func = [](const T& x0, const T& x1) -> T { return x0 < x1 ? x0 : x1; };
+            return reduce_dim<T>(reduce_func, dim, T(INFINITY));
+        }
         bool reduce_any() const {
             return std::reduce(_data.get(), _data.get() + _size * sizeof(T), false, [](bool x0, const T& x1) -> T { return x0 || x1 > 0; });
         }
-        std::vector<bool> reduce_any_dim(Dim dim) const;
+        Matrix<bool> reduce_any_dim(Dim dim) const {
+            auto reduce_func = [](const T& x0, const T& x1) -> T { return x0 || x1 > 0; };
+            return reduce_dim<bool>(reduce_func, dim, false);
+        }
         bool reduce_all() const {
             return std::reduce(_data.get(), _data.get() + _size * sizeof(T), true, [](bool x0, const T& x1) -> T { return x0 && x1 > 0; });
         }
-        std::vector<bool> reduce_all_dim(Dim dim) const;
+        Matrix<bool> reduce_all_dim(Dim dim) const {
+            auto reduce_func = [](const T& x0, const T& x1) -> T { return x0 && x1 > 0; };
+            return reduce_dim<bool>(reduce_func, dim, true);
+        }
 
         Matrix<T> dot(const Matrix<T>& matrix) const;
         void transpose();
