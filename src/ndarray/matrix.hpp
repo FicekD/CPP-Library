@@ -340,18 +340,52 @@ namespace ndarray {
                 result.at(i) = this->get(i) != scalar;
             return result;
         }
-        Matrix<bool> operator^(const Matrix<T>& matrix) const {
-            if (matrix._rows != _rows || matrix._cols != _cols)
+        Matrix<bool> operator^(const Matrix<bool>& matrix) const {
+            if (matrix.rows() != _rows || matrix.cols() != _cols)
                 throw std::invalid_argument("Matricies shape missmatch");
             Matrix<bool> result(_rows, _cols);
             for (std::size_t i = 0; i < _size; i++)
                 result.at(i) = this->get(i) ^ matrix.get(i);
             return result;
         }
-        Matrix<bool> operator^(const T& scalar) const {
+        Matrix<bool> operator^(bool scalar) const {
             Matrix<bool> result(_rows, _cols);
             for (std::size_t i = 0; i < _size; i++)
                 result.at(i) = this->get(i) ^ scalar;
+            return result;
+        }
+        Matrix<bool> operator||(const Matrix<bool>& matrix) const {
+            if (matrix.rows() != _rows || matrix.cols() != _cols)
+                throw std::invalid_argument("Matricies shape missmatch");
+            Matrix<bool> result(_rows, _cols);
+            for (std::size_t i = 0; i < _size; i++)
+                result.at(i) = this->get(i) || matrix.get(i);
+            return result;
+        }
+        Matrix<bool> operator||(bool scalar) const {
+            Matrix<bool> result(_rows, _cols);
+            for (std::size_t i = 0; i < _size; i++)
+                result.at(i) = this->get(i) || scalar;
+            return result;
+        }
+        Matrix<bool> operator&&(const Matrix<bool>& matrix) const {
+            if (matrix.rows() != _rows || matrix.cols() != _cols)
+                throw std::invalid_argument("Matricies shape missmatch");
+            Matrix<bool> result(_rows, _cols);
+            for (std::size_t i = 0; i < _size; i++)
+                result.at(i) = this->get(i) && matrix.get(i);
+            return result;
+        }
+        Matrix<bool> operator&&(bool scalar) const {
+            Matrix<bool> result(_rows, _cols);
+            for (std::size_t i = 0; i < _size; i++)
+                result.at(i) = this->get(i) && scalar;
+            return result;
+        }
+        Matrix<bool> operator!() const {
+            Matrix<bool> result(_rows, _cols);
+            for (std::size_t i = 0; i < _size; i++)
+                result.at(i) = !this->get(i);
             return result;
         }
 #pragma endregion LOGICAL_OPS

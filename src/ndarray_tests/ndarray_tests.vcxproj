@@ -159,7 +159,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="arithmetic_ops_tests.cpp" />
     <ClCompile Include="core_tests.cpp" />
+    <ClCompile Include="logical_ops_tests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ndarray\ndarray.vcxproj">
