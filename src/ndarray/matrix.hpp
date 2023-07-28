@@ -16,9 +16,6 @@ namespace ndarray {
     };
 
     template <typename T>
-    class RowWiseMatrixIterator;
-
-    template <typename T>
     class Matrix {
     private:
         std::unique_ptr<T> _data = nullptr;
@@ -27,23 +24,30 @@ namespace ndarray {
     public:
         Matrix() {}
         Matrix(const Matrix<T>& matrix) : _rows(matrix._rows), _cols(matrix._cols), _size(matrix._size) {
-            _data = std::unique_ptr<T>(new T[matrix._size]);
-            std::memcpy(_data.get(), matrix._data.get(), matrix._size * sizeof(T));
+            if (_size > 0) {
+                _data = std::unique_ptr<T>(new T[matrix._size]);
+                std::memcpy(_data.get(), matrix._data.get(), matrix._size * sizeof(T));
+            }
         }
         Matrix(Matrix<T>&& matrix) noexcept : _rows(matrix._rows), _cols(matrix._cols), _size(matrix._size) {
             _data = std::move(matrix._data);
             matrix.clear();
         }
         Matrix(std::size_t rows, std::size_t cols) : _rows(rows), _cols(cols), _size(cols * rows) {
-            _data = std::unique_ptr<T>(new T[_size] { T() });
+            if (_size > 0)
+                _data = std::unique_ptr<T>(new T[_size] { T() });
         }
         Matrix(std::size_t rows, std::size_t cols, T* data) : _rows(rows), _cols(cols), _size(cols * rows) {
-            _data = std::unique_ptr<T>(new T[_size]);
-            std::memcpy(_data.get(), data, _size * sizeof(T));
+            if (_size > 0) {
+                _data = std::unique_ptr<T>(new T[_size]);
+                std::memcpy(_data.get(), data, _size * sizeof(T));
+            }
         }
-        Matrix(std::size_t rows, std::size_t cols, const std::vector<T>& data) {
-            _data = std::unique_ptr<T>(new T[_size]);
-            std::memcpy(_data.get(), data.data(), _size * sizeof(T));
+        Matrix(std::size_t rows, std::size_t cols, const std::vector<T>& data) : _rows(rows), _cols(cols), _size(cols * rows) {
+            if (_size > 0) {
+                _data = std::unique_ptr<T>(new T[_size]);
+                std::memcpy(_data.get(), data.data(), _size * sizeof(T));
+            }
         }
 
         static Matrix<T> eye(std::size_t dim_size, int k = 0) {

@@ -5,6 +5,8 @@ VisualStudioVersion = 17.2.32630.192
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ndarray", "ndarray\ndarray.vcxproj", "{8E1D2B04-BBC6-4AA9-A25A-62542C127FF4}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ndarray_tests", "ndarray_tests\ndarray_tests.vcxproj", "{3E97D575-0A8E-40C8-84E7-1DBE7A617821}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +23,14 @@ Global
 		{8E1D2B04-BBC6-4AA9-A25A-62542C127FF4}.Release|x64.Build.0 = Release|x64
 		{8E1D2B04-BBC6-4AA9-A25A-62542C127FF4}.Release|x86.ActiveCfg = Release|Win32
 		{8E1D2B04-BBC6-4AA9-A25A-62542C127FF4}.Release|x86.Build.0 = Release|Win32
+		{3E97D575-0A8E-40C8-84E7-1DBE7A617821}.Debug|x64.ActiveCfg = Debug|x64
+		{3E97D575-0A8E-40C8-84E7-1DBE7A617821}.Debug|x64.Build.0 = Debug|x64
+		{3E97D575-0A8E-40C8-84E7-1DBE7A617821}.Debug|x86.ActiveCfg = Debug|Win32
+		{3E97D575-0A8E-40C8-84E7-1DBE7A617821}.Debug|x86.Build.0 = Debug|Win32
+		{3E97D575-0A8E-40C8-84E7-1DBE7A617821}.Release|x64.ActiveCfg = Release|x64
+		{3E97D575-0A8E-40C8-84E7-1DBE7A617821}.Release|x64.Build.0 = Release|x64
+		{3E97D575-0A8E-40C8-84E7-1DBE7A617821}.Release|x86.ActiveCfg = Release|Win32
+		{3E97D575-0A8E-40C8-84E7-1DBE7A617821}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

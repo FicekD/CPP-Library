@@ -1,10 +1,11 @@
 #include <iostream>
 
 #include "matrix.hpp"
-// #include "matrix_iterators.hpp"
 
 
 int main() {
+    ndarray::Matrix<int> x0(0, 5);
+    std::cout << x0.size() << std::endl;
     ndarray::Matrix<int> x1(5, 5);
     x1.fill(3);
     ndarray::Matrix<int> x2(5, 5);
@@ -22,6 +23,9 @@ int main() {
     std::cout << std::endl;
 
     std::cout << x4.reduce_sum() << std::endl;
+
+    std::cout << ndarray::Matrix<int>::eye(9, 1) << std::endl;
+
 
     return 0;
 }
