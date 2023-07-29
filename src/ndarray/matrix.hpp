@@ -235,7 +235,7 @@ namespace ndarray {
                 result.at(i) = this->get(i) / scalar;
             return result;
         }
-        Matrix<T> square(int power) const {
+        Matrix<T> square() const {
             Matrix<T> result(_rows, _cols);
             for (std::size_t i = 0; i < _size; i++)
                 result.at(i) = this->get(i) * this->get(i);
@@ -244,13 +244,13 @@ namespace ndarray {
         Matrix<T> sqrt() const {
             Matrix<T> result(_rows, _cols);
             for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = std::sqrt(this->get(i));
+                result.at(i) = static_cast<T>(std::sqrt(this->get(i)));
             return result;
         }
         Matrix<T> pow(int power) const {
             Matrix<T> result(_rows, _cols);
             for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = std::pow(this->get(i), power);
+                result.at(i) = static_cast<T>(std::pow(this->get(i), power));
             return result;
         }
 #pragma endregion ARITHMETIC_OPS
@@ -451,17 +451,17 @@ namespace ndarray {
             return reduce_dim<T>(reduce_func, dim, T(INFINITY));
         }
         bool reduce_any() const {
-            return std::reduce(_data.get(), _data.get() + _size, false, [](bool x0, const T& x1) -> T { return x0 || x1 > 0; });
+            return std::reduce(_data.get(), _data.get() + _size, false, [](bool x0, const T& x1) -> T { return x0 || x1 != 0; });
         }
         Matrix<bool> reduce_any_dim(Dim dim) const {
-            auto reduce_func = [](const T& x0, const T& x1) -> T { return x0 || x1 > 0; };
+            auto reduce_func = [](const T& x0, const T& x1) -> T { return x0 || x1 != 0; };
             return reduce_dim<bool>(reduce_func, dim, false);
         }
         bool reduce_all() const {
-            return std::reduce(_data.get(), _data.get() + _size, true, [](bool x0, const T& x1) -> T { return x0 && x1 > 0; });
+            return std::reduce(_data.get(), _data.get() + _size, true, [](bool x0, const T& x1) -> T { return x0 && x1 != 0; });
         }
         Matrix<bool> reduce_all_dim(Dim dim) const {
-            auto reduce_func = [](const T& x0, const T& x1) -> T { return x0 && x1 > 0; };
+            auto reduce_func = [](const T& x0, const T& x1) -> T { return x0 && x1 != 0; };
             return reduce_dim<bool>(reduce_func, dim, true);
         }
 
