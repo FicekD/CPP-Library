@@ -106,6 +106,14 @@ namespace ndarray {
             _rows = rows;
             _cols = cols;
         }
+        
+        template<typename U>
+        Matrix<U> astype() {
+            Matrix<U> result(_rows, _cols);
+            for (int i = 0; i < _size; i++)
+                result.at(i) = static_cast<U>(this->get(i));
+            return result;
+        }
 
         Matrix<T> sub_matrix(std::size_t row_0, std::size_t row_1, std::size_t col_0, std::size_t col_1) const {
             if (row_1 < row_0 || col_1 < col_0)
@@ -247,7 +255,7 @@ namespace ndarray {
                 result.at(i) = static_cast<T>(std::sqrt(this->get(i)));
             return result;
         }
-        Matrix<T> pow(int power) const {
+        Matrix<T> pow(double power) const {
             Matrix<T> result(_rows, _cols);
             for (std::size_t i = 0; i < _size; i++)
                 result.at(i) = static_cast<T>(std::pow(this->get(i), power));
@@ -255,6 +263,75 @@ namespace ndarray {
         }
 #pragma endregion ARITHMETIC_OPS
         
+#pragma region INPLACE_ARITHMETIC_OPS
+        void add_inplace(const T& scalar) {
+            for (int i = 0; i < _size; i++) {
+                this->at(i) += scalar;
+            }
+        }
+        void add_inplace(const Matrix<T>& matrix) {
+            if (matrix._rows != _rows || matrix._cols != _cols)
+                throw std::invalid_argument("Matricies shape missmatch");
+            for (int i = 0; i < _size; i++) {
+                this->at(i) += matrix.get(i);
+            }
+        }
+        void subtract_inplace(const T& scalar) {
+            for (int i = 0; i < _size; i++) {
+                this->at(i) -= scalar;
+            }
+        }
+        void subtract_inplace(const Matrix<T>& matrix) {
+            if (matrix._rows != _rows || matrix._cols != _cols)
+                throw std::invalid_argument("Matricies shape missmatch");
+            for (int i = 0; i < _size; i++) {
+                this->at(i) -= matrix.get(i);
+            }
+        }
+        void multiply_inplace(const T& scalar) {
+            for (int i = 0; i < _size; i++) {
+                this->at(i) *= scalar;
+            }
+        }
+        void multiply_inplace(const Matrix<T>& matrix) {
+            if (matrix._rows != _rows || matrix._cols != _cols)
+                throw std::invalid_argument("Matricies shape missmatch");
+            for (int i = 0; i < _size; i++) {
+                this->at(i) *= matrix.get(i);
+            }
+        }
+        void divide_inplace(const T& scalar) {
+            for (int i = 0; i < _size; i++) {
+                this->at(i) /= scalar;
+            }
+        }
+        void divide_inplace(const Matrix<T>& matrix) {
+            if (matrix._rows != _rows || matrix._cols != _cols)
+                throw std::invalid_argument("Matricies shape missmatch");
+            for (int i = 0; i < _size; i++) {
+                this->at(i) /= matrix.get(i);
+            }
+        }
+        void square_inplace() {
+            for (int i = 0; i < _size; i++) {
+                T& at_ref = this->at(i);
+                at_ref = at_ref * at_ref;
+            }
+        }
+        void sqrt_inplace() {
+            for (int i = 0; i < _size; i++) {
+                T& at_ref = this->at(i);
+                at_ref = static_cast<T>(std::sqrt(at_ref));
+            }
+        }
+        void pow_inplace(double power) {
+            for (int i = 0; i < _size; i++) {
+                T& at_ref = this->at(i);
+                at_ref = static_cast<T>(std::pow(at_ref, power));
+            }
+        }
+#pragma endregion INPLACE_ARITHMETIC_OPS
+
 #pragma region LOGICAL_OPS
         Matrix<bool> operator<(const Matrix<T>& matrix) const {
             if (matrix._rows != _rows || matrix._cols != _cols)
@@ -465,9 +542,9 @@ namespace ndarray {
             return reduce_dim<bool>(reduce_func, dim, true);
         }
 
+        Matrix<T> transpose() const;
+        void transpose_inplace();
         Matrix<T> dot(const Matrix<T>& matrix) const;
-        void transpose();
-        Matrix<T> transpose_copy() const;
         Matrix<T> inverse() const;
 
         class MatrixIterator {

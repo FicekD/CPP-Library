@@ -103,4 +103,81 @@ namespace arithmetic_ops_tests {
 			Assert::IsTrue((target_matrix == 27).reduce_all());
 		}
 	};
+	TEST_CLASS(arithmetic_inplace_ops_tests) {
+	public:
+		TEST_METHOD(Addition) {
+			ndarray::Matrix<int> original_matrix(10, 10);
+			original_matrix.fill(5);
+			ndarray::Matrix<int> matrix(10, 10);
+			matrix.fill(37);
+
+			original_matrix.add_inplace(8);
+			Assert::IsTrue((original_matrix == 13).reduce_all());
+
+			original_matrix.add_inplace(17);
+			matrix.clear();
+
+			Assert::IsTrue((original_matrix == 30).reduce_all());
+		}
+		TEST_METHOD(Subtraction) {
+			ndarray::Matrix<int> original_matrix(10, 10);
+			original_matrix.fill(5);
+			ndarray::Matrix<int> matrix(10, 10);
+			matrix.fill(37);
+
+			original_matrix.subtract_inplace(8);
+			Assert::IsTrue((original_matrix == -3).reduce_all());
+
+			original_matrix.subtract_inplace(17);
+			matrix.clear();
+
+			Assert::IsTrue((original_matrix == -20).reduce_all());
+		}
+		TEST_METHOD(Multiplication) {
+			ndarray::Matrix<int> original_matrix(10, 10);
+			original_matrix.fill(5);
+			ndarray::Matrix<int> matrix(10, 10);
+			matrix.fill(37);
+
+			original_matrix.multiply_inplace(8);
+			Assert::IsTrue((original_matrix == 40).reduce_all());
+
+			original_matrix.multiply_inplace(2);
+			matrix.clear();
+
+			Assert::IsTrue((original_matrix == 80).reduce_all());
+		}
+		TEST_METHOD(Division) {
+			ndarray::Matrix<int> original_matrix(10, 10);
+			original_matrix.fill(40);
+			ndarray::Matrix<int> matrix(10, 10);
+			matrix.fill(37);
+
+			original_matrix.divide_inplace(8);
+			Assert::IsTrue((original_matrix == 5).reduce_all());
+
+			original_matrix.divide_inplace(5);
+			matrix.clear();
+
+			Assert::IsTrue((original_matrix == 1).reduce_all());
+		}
+		TEST_METHOD(Square) {
+			ndarray::Matrix<int> original_matrix(10, 10);
+			original_matrix.fill(3);
+			original_matrix.square_inplace();
+			Assert::IsTrue((original_matrix == 9).reduce_all());
+		}
+		TEST_METHOD(SquareRoot) {
+			ndarray::Matrix<int> original_matrix(10, 10);
+			original_matrix.fill(81);
+			original_matrix.sqrt_inplace();
+			Assert::IsTrue((original_matrix == 9).reduce_all());
+		}
+		TEST_METHOD(Power) {
+			ndarray::Matrix<int> original_matrix(10, 10);
+			original_matrix.fill(3);
+			original_matrix.pow_inplace(3);
+			Assert::IsTrue((original_matrix == 27).reduce_all());
+		}
+	};
 }
