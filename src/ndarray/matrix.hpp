@@ -21,6 +21,7 @@ namespace ndarray {
         std::size_t _rows = 0, _cols = 0;
         std::size_t _size = 0;
     public:
+#pragma region CONSTRUCTORS
         Matrix() {}
         Matrix(const Matrix<T>& matrix) : _rows(matrix._rows), _cols(matrix._cols), _size(matrix._size) {
             if (_size > 0) {
@@ -65,6 +66,9 @@ namespace ndarray {
             return ret;
         }
 
+#pragma endregion CONSTRUCTORS
+
+#pragma region CORE
         std::size_t rows() const { return _rows; }
         std::size_t cols() const { return _cols; }
         std::size_t size() const { return _size; }
@@ -124,48 +128,8 @@ namespace ndarray {
                     result.at(row, col) = this->get(row_0 + row, col_0 + col);
             return result;
         }
-        
-        Matrix<T> flip_ud() const {
-            Matrix<T> result(_rows, _cols);
-            for (std::size_t row = 0; row < std::size_t(std::ceil(float(_rows) / 2)); row++) {
-                for (std::size_t col = 0; col < _cols; col++) {
-                    result.at(_rows - 1 - row, col) = this->get(row, col);
-                    result.at(row, col) = this->get(_rows - 1 - row, col);
-                }
-            }
-            return result;
-        }
-        Matrix<T> flip_lr() const {
-            Matrix<T> result(_rows, _cols);
-            for (std::size_t col = 0; col < std::size_t(std::ceil(float(_cols) / 2)); col++) {
-                for (std::size_t row = 0; row < _rows; row++) {
-                    result.at(row, _cols - 1 - col) = this->get(row, col);
-                    result.at(row, col) = this->get(row, _cols - 1 - col);
-                }
-            }
-            return result;
-        }
-        
-        Matrix<T> pad(std::size_t pre_rows, std::size_t post_rows, std::size_t pre_cols, std::size_t post_cols, const T& scalar) const {
-            Matrix<T> result(_rows + pre_rows + post_rows, _cols + pre_cols + post_cols);
-            for (std::size_t row = 0; row < pre_rows; row++)
-                for (std::size_t col = 0; col < result._cols; col++)
-                    result.at(row, col) = scalar; 
-            for (std::size_t row = pre_rows + _rows; row < result._rows; row++)
-                for (std::size_t col = 0; col < result._cols; col++)
-                    result.at(row, col) = scalar;
-            for (std::size_t col = 0; col < pre_cols; col++)
-                for (std::size_t row = pre_rows; row < result._rows - post_rows; row++)
-                    result.at(row, col) = scalar;
-            for (std::size_t col = pre_cols + _cols; col < result._cols; col++)
-                for (std::size_t row = pre_rows; row < result._rows - post_rows; row++)
-                    result.at(row, col) = scalar;
-            
-            for (std::size_t row = 0; row < _rows; row++)
-                for (std::size_t col = 0; col < _cols; col++)
-                    result.at(row + pre_rows, col + pre_cols) = this->get(row, col);
-            return result;
-        }
+
+#pragma endregion CORE
 
 #pragma region ARITHMETIC_OPS
         void operator=(const Matrix<T>& matrix) {
@@ -465,6 +429,9 @@ namespace ndarray {
             return result;
         }
 #pragma endregion LOGICAL_OPS
+        
+#pragma region REDUCE
+
         template<typename R>
         Matrix<R> reduce_rows(const std::function<R(const R&, const T&)>& lambda, const R& initializer) const {
             Matrix<R> result(1, _cols);
@@ -541,10 +508,62 @@ namespace ndarray {
             return reduce_dim<bool>(reduce_func, dim, true);
         }
 
+#pragma endregion REDUCE
+
+#pragma region LINALG
+
         Matrix<T> transpose() const;
         void transpose_inplace();
         Matrix<T> dot(const Matrix<T>& matrix) const;
         Matrix<T> inverse() const;
+
+#pragma endregion LINALG
+
+#pragma region OTHER
+
+        Matrix<T> flip_ud() const {
+            Matrix<T> result(_rows, _cols);
+            for (std::size_t row = 0; row < std::size_t(std::ceil(float(_rows) / 2)); row++) {
+                for (std::size_t col = 0; col < _cols; col++) {
+                    result.at(_rows - 1 - row, col) = this->get(row, col);
+                    result.at(row, col) = this->get(_rows - 1 - row, col);
+                }
+            }
+            return result;
+        }
+        Matrix<T> flip_lr() const {
+            Matrix<T> result(_rows, _cols);
+            for (std::size_t col = 0; col < std::size_t(std::ceil(float(_cols) / 2)); col++) {
+                for (std::size_t row = 0; row < _rows; row++) {
+                    result.at(row, _cols - 1 - col) = this->get(row, col);
+                    result.at(row, col) = this->get(row, _cols - 1 - col);
+                }
+            }
+            return result;
+        }
+        
+        Matrix<T> pad(std::size_t pre_rows, std::size_t post_rows, std::size_t pre_cols, std::size_t post_cols, const T& scalar) const {
+            Matrix<T> result(_rows + pre_rows + post_rows, _cols + pre_cols + post_cols);
+            for (std::size_t row = 0; row < pre_rows; row++)
+                for (std::size_t col = 0; col < result._cols; col++)
+                    result.at(row, col) = scalar; 
+            for (std::size_t row = pre_rows + _rows; row < result._rows; row++)
+                for (std::size_t col = 0; col < result._cols; col++)
+                    result.at(row, col) = scalar;
+            for (std::size_t col = 0; col < pre_cols; col++)
+                for (std::size_t row = pre_rows; row < result._rows - post_rows; row++)
+                    result.at(row, col) = scalar;
+            for (std::size_t col = pre_cols + _cols; col < result._cols; col++)
+                for (std::size_t row = pre_rows; row < result._rows - post_rows; row++)
+                    result.at(row, col) = scalar;
+            
+            for (std::size_t row = 0; row < _rows; row++)
+                for (std::size_t col = 0; col < _cols; col++)
+                    result.at(row + pre_rows, col + pre_cols) = this->get(row, col);
+            return result;
+        }
+
+#pragma endregion OTHER
 
         class MatrixIterator {
         private:
