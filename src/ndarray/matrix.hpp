@@ -8,6 +8,7 @@
 #include <cmath>
 #include <numeric>
 #include <functional>
+#include <format>
 
 namespace ndarray {
     enum Dim {
