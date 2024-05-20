@@ -7,7 +7,6 @@
 #include <cstring>
 #include <cmath>
 #include <numeric>
-#include <format>
 #include <functional>
 
 namespace ndarray {
