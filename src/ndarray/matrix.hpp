@@ -565,6 +565,8 @@ namespace ndarray {
 
 #pragma endregion OTHER
 
+#pragma region ITERATOR
+
         class MatrixIterator {
         private:
             Matrix<T>* _mat_ptr;
@@ -638,6 +640,8 @@ namespace ndarray {
 
         MatrixIterator begin() const { return MatrixIterator(const_cast<Matrix*>(this), ROWS, 0, 0, _rows, 0, _cols); }
         MatrixIterator end() const { return MatrixIterator(const_cast<Matrix*>(this), ROWS, _size, 0, _rows, 0, _cols); }
+
+#pragma endregion ITERATOR
 
         template<typename U>
         friend std::ostream& operator<<(std::ostream& stream, const Matrix<U>& object);
