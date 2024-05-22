@@ -225,6 +225,7 @@ namespace ndarray {
                 result.at(i) = static_cast<T>(std::pow(this->get(i), power));
             return result;
         }
+
 #pragma endregion ARITHMETIC_OPS
         
 #pragma region INPLACE_ARITHMETIC_OPS
@@ -295,6 +296,40 @@ namespace ndarray {
             }
         }
 #pragma endregion INPLACE_ARITHMETIC_OPS
+
+#pragma region MATH_OPS
+        Matrix<T> exp() const;
+        Matrix<T> exp2() const;
+        Matrix<T> exp10() const;
+        Matrix<T> log() const;
+        Matrix<T> log2() const;
+        Matrix<T> log10() const;
+
+        Matrix<T> sin() const;
+        Matrix<T> cos() const;
+        Matrix<T> tan() const;
+        Matrix<T> arcsin() const;
+        Matrix<T> arccos() const;
+        Matrix<T> arctan() const;
+        Matrix<T> arctan2() const;
+
+        Matrix<T> deg2rad() const;
+        Matrix<T> rad2deg() const;
+
+        Matrix<T> abs() const;
+        Matrix<T> sign() const;
+        Matrix<T> clip() const;
+
+        Matrix<T> round() const;
+        Matrix<T> floor() const;
+        Matrix<T> ceil() const;
+        Matrix<T> trunc() const;
+
+#pragma endregion MATH_OPS
+
+#pragma region MATH_OPS_INPLACE
+
+#pragma endregion MATH_OPS_INPLACE
 
 #pragma region LOGICAL_OPS
         Matrix<bool> operator<(const Matrix<T>& matrix) const {
@@ -432,7 +467,6 @@ namespace ndarray {
 #pragma endregion LOGICAL_OPS
         
 #pragma region REDUCE
-
         template<typename R>
         Matrix<R> reduce_rows(const std::function<R(const R&, const T&)>& lambda, const R& initializer) const {
             Matrix<R> result(1, _cols);
@@ -458,7 +492,7 @@ namespace ndarray {
             return result;
         }
         template<typename R>
-        Matrix<R> reduce_dim(const std::function<R(const R&, const T&)>& lambda, Dim dim, const R& initializer) const {
+        Matrix<R> reduce(const std::function<R(const R&, const T&)>& lambda, Dim dim, const R& initializer) const {
             if (dim == ROWS) {
                 return reduce_rows<R>(lambda, initializer);
             }
@@ -471,57 +505,74 @@ namespace ndarray {
         }
         Matrix<T> reduce_sum(Dim dim) const {
             auto reduce_func = [](const T& x0, const T& x1) -> T { return x0 + x1; };
-            return reduce_dim<T>(reduce_func, dim, T(0));
+            return reduce<T>(reduce_func, dim, T(0));
         }
         T reduce_prod() const {
             return std::reduce(_data.get(), _data.get() + _size, T(1), [](const T& x0, const T& x1) -> T { return x0 * x1; });
         }
         Matrix<T> reduce_prod(Dim dim) const {
             auto reduce_func = [](const T& x0, const T& x1) -> T { return x0 * x1; };
-            return reduce_dim<T>(reduce_func, dim, T(1));
+            return reduce<T>(reduce_func, dim, T(1));
         }
         T reduce_max() const {
             return std::reduce(_data.get(), _data.get() + _size, T(-INFINITY), [](const T& x0, const T& x1) -> T { return x0 > x1 ? x0 : x1; });
         }
         Matrix<T> reduce_max(Dim dim) const {
             auto reduce_func = [](const T& x0, const T& x1) -> T { return x0 > x1 ? x0 : x1; };
-            return reduce_dim<T>(reduce_func, dim, T(-INFINITY));
+            return reduce<T>(reduce_func, dim, T(-INFINITY));
         }
         T reduce_min() const {
             return std::reduce(_data.get(), _data.get() + _size, T(INFINITY), [](const T& x0, const T& x1) -> T { return x0 < x1 ? x0 : x1; });
         }
         Matrix<T> reduce_min(Dim dim) const {
             auto reduce_func = [](const T& x0, const T& x1) -> T { return x0 < x1 ? x0 : x1; };
-            return reduce_dim<T>(reduce_func, dim, T(INFINITY));
+            return reduce<T>(reduce_func, dim, T(INFINITY));
         }
         bool reduce_any() const {
             return std::reduce(_data.get(), _data.get() + _size, false, [](bool x0, const T& x1) -> T { return x0 || x1 != 0; });
         }
         Matrix<bool> reduce_any(Dim dim) const {
             auto reduce_func = [](const T& x0, const T& x1) -> T { return x0 || x1 != 0; };
-            return reduce_dim<bool>(reduce_func, dim, false);
+            return reduce<bool>(reduce_func, dim, false);
         }
         bool reduce_all() const {
             return std::reduce(_data.get(), _data.get() + _size, true, [](bool x0, const T& x1) -> T { return x0 && x1 != 0; });
         }
         Matrix<bool> reduce_all(Dim dim) const {
             auto reduce_func = [](const T& x0, const T& x1) -> T { return x0 && x1 != 0; };
-            return reduce_dim<bool>(reduce_func, dim, true);
+            return reduce<bool>(reduce_func, dim, true);
         }
 
 #pragma endregion REDUCE
 
 #pragma region LINALG
-
-        Matrix<T> transpose() const;
+        Matrix<T> transpose() const {
+            Matrix<T> mat(_cols, _rows);
+            for (std::size_t row = 0; row < _rows; row++) {
+                for (std::size_t col = 0; col < _cols; col++) {
+                    mat.at(col, row) = this->at(row, col);
+                }
+            }
+            return mat;
+        }
         void transpose_inplace();
+
         Matrix<T> dot(const Matrix<T>& matrix) const;
         Matrix<T> inverse() const;
+        Matrix<T> pseudo_inverse() const;
+
+        std::tuple<Matrix<T>, Matrix<T>> eig() const;
+
+        Matrix<T> cholesky() const;
+        std::tuple<Matrix<T>, Matrix<T>, Matrix<T>> svd() const;
+
+        std::size_t rank() const;
+        T det() const;
+        T trace(int k = 0) const;
 
 #pragma endregion LINALG
 
 #pragma region OTHER
-
         Matrix<T> flip_ud() const {
             Matrix<T> result(_rows, _cols);
             for (std::size_t row = 0; row < std::size_t(std::ceil(float(_rows) / 2)); row++) {
@@ -567,7 +618,6 @@ namespace ndarray {
 #pragma endregion OTHER
 
 #pragma region ITERATOR
-
         class MatrixIterator {
         private:
             Matrix<T>* _mat_ptr;
