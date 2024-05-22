@@ -584,7 +584,7 @@ namespace ndarray {
             MatrixIterator(Matrix<T>* mat_ptr, Dim order, std::size_t ptr,
                            std::size_t row_start, std::size_t row_end,
                            std::size_t col_start, std::size_t col_end)
-                : _row_start(row_start), _row_end(row_end), _col_start(col_start), _col_end(col_end), _order(order), _ptr(ptr), _mat_ptr(mat_ptr) {
+                : _mat_ptr(mat_ptr), _ptr(ptr), _row_start(row_start), _col_start(col_start), _row_end(row_end), _col_end(col_end), _order(order) {
                 _iter_rows = row_end - row_start;
                 _iter_cols = col_end - col_start;
                 if (_iter_rows < 0 || _iter_cols < 0)
