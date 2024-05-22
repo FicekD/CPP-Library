@@ -23,6 +23,7 @@ int main() {
     std::cout << std::endl;
 
     std::cout << x4.reduce_sum() << std::endl;
+    std::cout << x4.reduce_sum(ndarray::COLS) << std::endl;
 
     std::cout << ndarray::Matrix<int>::eye(9, 1) << std::endl;
 

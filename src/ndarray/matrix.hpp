@@ -469,42 +469,42 @@ namespace ndarray {
         T reduce_sum() const {
             return std::reduce(_data.get(), _data.get() + _size, T(0), [](const T& x0, const T& x1) -> T { return x0 + x1; });
         }
-        Matrix<T> reduce_sum_dim(Dim dim) const {
+        Matrix<T> reduce_sum(Dim dim) const {
             auto reduce_func = [](const T& x0, const T& x1) -> T { return x0 + x1; };
             return reduce_dim<T>(reduce_func, dim, T(0));
         }
         T reduce_prod() const {
             return std::reduce(_data.get(), _data.get() + _size, T(1), [](const T& x0, const T& x1) -> T { return x0 * x1; });
         }
-        Matrix<T> reduce_prod_dim(Dim dim) const {
+        Matrix<T> reduce_prod(Dim dim) const {
             auto reduce_func = [](const T& x0, const T& x1) -> T { return x0 * x1; };
             return reduce_dim<T>(reduce_func, dim, T(1));
         }
         T reduce_max() const {
             return std::reduce(_data.get(), _data.get() + _size, T(-INFINITY), [](const T& x0, const T& x1) -> T { return x0 > x1 ? x0 : x1; });
         }
-        Matrix<T> reduce_max_dim(Dim dim) const {
+        Matrix<T> reduce_max(Dim dim) const {
             auto reduce_func = [](const T& x0, const T& x1) -> T { return x0 > x1 ? x0 : x1; };
             return reduce_dim<T>(reduce_func, dim, T(-INFINITY));
         }
         T reduce_min() const {
             return std::reduce(_data.get(), _data.get() + _size, T(INFINITY), [](const T& x0, const T& x1) -> T { return x0 < x1 ? x0 : x1; });
         }
-        Matrix<T> reduce_min_dim(Dim dim) const {
+        Matrix<T> reduce_min(Dim dim) const {
             auto reduce_func = [](const T& x0, const T& x1) -> T { return x0 < x1 ? x0 : x1; };
             return reduce_dim<T>(reduce_func, dim, T(INFINITY));
         }
         bool reduce_any() const {
             return std::reduce(_data.get(), _data.get() + _size, false, [](bool x0, const T& x1) -> T { return x0 || x1 != 0; });
         }
-        Matrix<bool> reduce_any_dim(Dim dim) const {
+        Matrix<bool> reduce_any(Dim dim) const {
             auto reduce_func = [](const T& x0, const T& x1) -> T { return x0 || x1 != 0; };
             return reduce_dim<bool>(reduce_func, dim, false);
         }
         bool reduce_all() const {
             return std::reduce(_data.get(), _data.get() + _size, true, [](bool x0, const T& x1) -> T { return x0 && x1 != 0; });
         }
-        Matrix<bool> reduce_all_dim(Dim dim) const {
+        Matrix<bool> reduce_all(Dim dim) const {
             auto reduce_func = [](const T& x0, const T& x1) -> T { return x0 && x1 != 0; };
             return reduce_dim<bool>(reduce_func, dim, true);
         }
