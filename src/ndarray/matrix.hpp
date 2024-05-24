@@ -9,6 +9,7 @@
 #include <numeric>
 #include <functional>
 #include <format>
+#include <algorithm>
 
 namespace ndarray {
     enum Dim {
@@ -55,14 +56,15 @@ namespace ndarray {
             size_t abs_k = std::abs(k);
             if (abs_k > dim_size)
                 throw std::invalid_argument("k out of eye matrix dimensions");
+            T one = T(1);
             Matrix<T> ret = Matrix(dim_size, dim_size);
             if (k >= 0)
                 for (size_t i = 0; i < dim_size - abs_k; i++) {
-                    ret.at(i, i + abs_k) = T(1);
+                    ret.at(i, i + abs_k) = one;
                 }
             else
                 for (size_t i = 0; i < dim_size - abs_k; i++) {
-                    ret.at(i + abs_k, i) = T(1);
+                    ret.at(i + abs_k, i) = one;
                 }
             return ret;
         }
@@ -298,36 +300,170 @@ namespace ndarray {
 #pragma endregion INPLACE_ARITHMETIC_OPS
 
 #pragma region MATH_OPS
-        Matrix<T> exp() const;
-        Matrix<T> exp2() const;
-        Matrix<T> exp10() const;
-        Matrix<T> log() const;
-        Matrix<T> log2() const;
-        Matrix<T> log10() const;
+        Matrix<T> exp() const {
+            Matrix<T> result(_rows, _cols);
+            for (std::size_t i = 0; i < _size; i++)
+                result.at(i) = std::exp(this->at(i));
+            return result;
+        }
+        Matrix<T> exp2() const {
+            Matrix<T> result(_rows, _cols);
+            for (std::size_t i = 0; i < _size; i++)
+                result.at(i) = std::exp2(this->at(i));
+            return result;
+        }
+        Matrix<T> exp10() const {
+            Matrix<T> result(_rows, _cols);
+            T ten = T(10);
+            for (std::size_t i = 0; i < _size; i++)
+                result.at(i) = std::pow(ten, this->at(i));
+            return result;
+        }
+        Matrix<T> log() const {
+            Matrix<T> result(_rows, _cols);
+            for (std::size_t i = 0; i < _size; i++)
+                result.at(i) = std::log(this->at(i));
+            return result;
+        }
+        Matrix<T> log2() const {
+            Matrix<T> result(_rows, _cols);
+            for (std::size_t i = 0; i < _size; i++)
+                result.at(i) = std::log2(this->at(i));
+            return result;
+        }
+        Matrix<T> log10() const {
+            Matrix<T> result(_rows, _cols);
+            for (std::size_t i = 0; i < _size; i++)
+                result.at(i) = std::log10(this->at(i));
+            return result;
+        }
 
-        Matrix<T> sin() const;
-        Matrix<T> cos() const;
-        Matrix<T> tan() const;
-        Matrix<T> arcsin() const;
-        Matrix<T> arccos() const;
-        Matrix<T> arctan() const;
-        Matrix<T> arctan2() const;
+        Matrix<T> sin() const {
+            Matrix<T> result(_rows, _cols);
+            for (std::size_t i = 0; i < _size; i++)
+                result.at(i) = std::sin(this->at(i));
+            return result;
+        }
+        Matrix<T> cos() const {
+            Matrix<T> result(_rows, _cols);
+            for (std::size_t i = 0; i < _size; i++)
+                result.at(i) = std::cos(this->at(i));
+            return result;
+        }
+        Matrix<T> tan() const {
+            Matrix<T> result(_rows, _cols);
+            for (std::size_t i = 0; i < _size; i++)
+                result.at(i) = std::tan(this->at(i));
+            return result;
+        }
+        Matrix<T> arcsin() const {
+            Matrix<T> result(_rows, _cols);
+            for (std::size_t i = 0; i < _size; i++)
+                result.at(i) = std::asin(this->at(i));
+            return result;
+        }
+        Matrix<T> arccos() const {
+            Matrix<T> result(_rows, _cols);
+            for (std::size_t i = 0; i < _size; i++)
+                result.at(i) = std::acos(this->at(i));
+            return result;
+        }
+        Matrix<T> arctan() const {
+            Matrix<T> result(_rows, _cols);
+            for (std::size_t i = 0; i < _size; i++)
+                result.at(i) = std::atan(this->at(i));
+            return result;
+        }
 
-        Matrix<T> deg2rad() const;
-        Matrix<T> rad2deg() const;
+        Matrix<T> deg2rad() const {
+            Matrix<T> result(_rows, _cols);
+            T coeff = T(M_PI / 180.0)
+            for (std::size_t i = 0; i < _size; i++)
+                result.at(i) = coeff * this->at(i);
+            return result;
+        }
+        Matrix<T> rad2deg() const {
+            Matrix<T> result(_rows, _cols);
+            T coeff = T(180.0 / M_PI)
+            for (std::size_t i = 0; i < _size; i++)
+                result.at(i) = coeff * this->at(i);
+            return result;
+        }
 
-        Matrix<T> abs() const;
-        Matrix<T> sign() const;
-        Matrix<T> clip() const;
+        Matrix<T> abs() const {
+            Matrix<T> result(_rows, _cols);
+            for (std::size_t i = 0; i < _size; i++)
+                result.at(i) = std::abs(this->at(i));
+            return result;
+        }
+        Matrix<int> sign() const {
+            Matrix<T> result(_rows, _cols);
+            T zero = T(0);
+            for (std::size_t i = 0; i < _size; i++) {
+                T val = this->at(i);
+                result.at(i) = (va > zero) - (val < zero);
+            }
+            return result;
+        }
+        Matrix<T> clamp(const T& min, const T& max) const {
+            Matrix<T> result(_rows, _cols);
+            for (std::size_t i = 0; i < _size; i++)
+                result.at(i) = std::clamp(this->at(i), min, max);
+            return result;
+        }
 
-        Matrix<T> round() const;
-        Matrix<T> floor() const;
-        Matrix<T> ceil() const;
-        Matrix<T> trunc() const;
+        Matrix<T> round() const {
+            Matrix<T> result(_rows, _cols);
+            for (std::size_t i = 0; i < _size; i++)
+                result.at(i) = std::round(this->at(i));
+            return result;
+        }
+        Matrix<T> floor() const {
+            Matrix<T> result(_rows, _cols);
+            for (std::size_t i = 0; i < _size; i++)
+                result.at(i) = std::floor(this->at(i));
+            return result;
+        }
+        Matrix<T> ceil() const {
+            Matrix<T> result(_rows, _cols);
+            for (std::size_t i = 0; i < _size; i++)
+                result.at(i) = std::ceil(this->at(i));
+            return result;
+        }
+        Matrix<T> trunc() const {
+            Matrix<T> result(_rows, _cols);
+            for (std::size_t i = 0; i < _size; i++)
+                result.at(i) = std::trunc(this->at(i));
+            return result;
+        }
 
 #pragma endregion MATH_OPS
 
 #pragma region MATH_OPS_INPLACE
+        void exp_inplace();
+        void exp2_inplace();
+        void exp10_inplace();
+        void log_inplace();
+        void log2_inplace();
+        void log10_inplace();
+
+        void sin_inplace();
+        void cos_inplace();
+        void tan_inplace();
+        void arcsin_inplace();
+        void arccos_inplace();
+        void arctan_inplace();
+
+        void deg2rad_inplace();
+        void rad2deg_inplace();
+
+        void abs_inplace();
+        void clamp_inplace(const T& min, const T& max);
+
+        void round_inplace();
+        void floor_inplace();
+        void ceil_inplace();
+        void trunc_inplace();
 
 #pragma endregion MATH_OPS_INPLACE
 
