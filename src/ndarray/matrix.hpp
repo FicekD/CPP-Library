@@ -85,6 +85,10 @@ namespace ndarray {
                 this->at(i) = scalar;
         }
 
+        std::size_t ravel_indices(std::size_t row, std::size_t col) const {
+            return row * _cols + col;
+        }
+
         T get(std::size_t x) const {
             if (x >= _size)
                 throw std::invalid_argument("Indices out of bounds");
@@ -93,7 +97,7 @@ namespace ndarray {
         T get(std::size_t row, std::size_t col) const {
             if (row >= _rows || col >= _cols)
                 throw std::invalid_argument("Indices out of bounds");
-            return get(row * _cols + col);
+            return get(ravel_indices(row, col));
         }
         T& at(std::size_t x) {
             if (x >= _size)
@@ -103,7 +107,7 @@ namespace ndarray {
         T& at(std::size_t row, std::size_t col) {
             if (row >= _rows || col >= _cols)
                 throw std::invalid_argument("Indices out of bounds");
-            return at(row * _cols + col);
+            return at(ravel_indices(row, col));
         }
 
         void reshape(std::size_t rows, std::size_t cols) {
@@ -794,7 +798,16 @@ namespace ndarray {
             }
             return mat;
         }
-        void transpose_inplace();
+        void transpose_inplace() {
+            for (std::size_t row = 0; row < _rows; row++) {
+                for (std::size_t col = 0; col < _cols; col++) {
+                    if (col >= row)
+                        break;
+                    std::swap(this->at(ravel_indices(row, col)), this->at(ravel_indices(col, row)));
+                }
+            }
+            this->reshape(_cols, _rows);
+        }
 
         Matrix<T> dot(const Matrix<T>& matrix) const;
         Matrix<T> inverse() const;
