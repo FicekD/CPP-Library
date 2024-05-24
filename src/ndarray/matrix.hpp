@@ -377,14 +377,14 @@ namespace ndarray {
 
         Matrix<T> deg2rad() const {
             Matrix<T> result(_rows, _cols);
-            T coeff = T(M_PI / 180.0)
+            T coeff = T(M_PI / 180.0);
             for (std::size_t i = 0; i < _size; i++)
                 result.at(i) = coeff * this->at(i);
             return result;
         }
         Matrix<T> rad2deg() const {
             Matrix<T> result(_rows, _cols);
-            T coeff = T(180.0 / M_PI)
+            T coeff = T(180.0 / M_PI);
             for (std::size_t i = 0; i < _size; i++)
                 result.at(i) = coeff * this->at(i);
             return result;
@@ -401,7 +401,7 @@ namespace ndarray {
             T zero = T(0);
             for (std::size_t i = 0; i < _size; i++) {
                 T val = this->at(i);
-                result.at(i) = (va > zero) - (val < zero);
+                result.at(i) = (val > zero) - (val < zero);
             }
             return result;
         }
@@ -440,30 +440,133 @@ namespace ndarray {
 #pragma endregion MATH_OPS
 
 #pragma region MATH_OPS_INPLACE
-        void exp_inplace();
-        void exp2_inplace();
-        void exp10_inplace();
-        void log_inplace();
-        void log2_inplace();
-        void log10_inplace();
+        void exp_inplace() {
+            for (std::size_t i = 0; i < _size; i++) {
+                T& ref = this->at(i);
+                ref = std::exp(ref);
+            }
+        }
+        void exp2_inplace() {
+            for (std::size_t i = 0; i < _size; i++) {
+                T& ref = this->at(i);
+                ref = std::exp2(ref);
+            }
+        }
+        void exp10_inplace() {
+            T ten = T(10);
+            for (std::size_t i = 0; i < _size; i++) {
+                T& ref = this->at(i);
+                ref = std::pow(ten, ref);
+            }
+        }
+        void log_inplace() {
+            for (std::size_t i = 0; i < _size; i++) {
+                T& ref = this->at(i);
+                ref = std::log(ref);
+            }
+        }
+        void log2_inplace() {
+            for (std::size_t i = 0; i < _size; i++) {
+                T& ref = this->at(i);
+                ref = std::log2(ref);
+            }
+        }
+        void log10_inplace() {
+            for (std::size_t i = 0; i < _size; i++) {
+                T& ref = this->at(i);
+                ref = std::log10(ref);
+            }
+        }
 
-        void sin_inplace();
-        void cos_inplace();
-        void tan_inplace();
-        void arcsin_inplace();
-        void arccos_inplace();
-        void arctan_inplace();
+        void sin_inplace() {
+            for (std::size_t i = 0; i < _size; i++) {
+                T& ref = this->at(i);
+                ref = std::sin(ref);
+            }
+        }
+        void cos_inplace() {
+            for (std::size_t i = 0; i < _size; i++) {
+                T& ref = this->at(i);
+                ref = std::cos(ref);
+            }
+        }
+        void tan_inplace() {
+            for (std::size_t i = 0; i < _size; i++) {
+                T& ref = this->at(i);
+                ref = std::tan(ref);
+            }
+        }
+        void arcsin_inplace() {
+            for (std::size_t i = 0; i < _size; i++) {
+                T& ref = this->at(i);
+                ref = std::asin(ref);
+            }
+        }
+        void arccos_inplace() {
+            for (std::size_t i = 0; i < _size; i++) {
+                T& ref = this->at(i);
+                ref = std::acos(ref);
+            }
+        }
+        void arctan_inplace() {
+            for (std::size_t i = 0; i < _size; i++) {
+                T& ref = this->at(i);
+                ref = std::atan(ref);
+            }
+        }
 
-        void deg2rad_inplace();
-        void rad2deg_inplace();
+        void deg2rad_inplace() {
+            T coeff = T(M_PI / 180.0);
+            for (std::size_t i = 0; i < _size; i++) {
+                T& ref = this->at(i);
+                ref = ref * coeff;
+            }
+        }
+        void rad2deg_inplace() {
+            T coeff = T(180.0 / M_PI);
+            for (std::size_t i = 0; i < _size; i++) {
+                T& ref = this->at(i);
+                ref = ref * coeff;
+            }
+        }
 
-        void abs_inplace();
-        void clamp_inplace(const T& min, const T& max);
+        void abs_inplace() {
+            for (std::size_t i = 0; i < _size; i++) {
+                T& ref = this->at(i);
+                ref = std::abs(ref);
+            }
+        }
+        void clamp_inplace(const T& min, const T& max) {
+            for (std::size_t i = 0; i < _size; i++) {
+                T& ref = this->at(i);
+                ref = std::clamp(ref, min, max);
+            }
+        }
 
-        void round_inplace();
-        void floor_inplace();
-        void ceil_inplace();
-        void trunc_inplace();
+        void round_inplace() {
+            for (std::size_t i = 0; i < _size; i++) {
+                T& ref = this->at(i);
+                ref = std::round(ref);
+            }
+        }
+        void floor_inplace() {
+            for (std::size_t i = 0; i < _size; i++) {
+                T& ref = this->at(i);
+                ref = std::floor(ref);
+            }
+        }
+        void ceil_inplace() {
+            for (std::size_t i = 0; i < _size; i++) {
+                T& ref = this->at(i);
+                ref = std::ceil(ref);
+            }
+        }
+        void trunc_inplace() {
+            for (std::size_t i = 0; i < _size; i++) {
+                T& ref = this->at(i);
+                ref = std::trunc(ref);
+            }
+        }
 
 #pragma endregion MATH_OPS_INPLACE
 
