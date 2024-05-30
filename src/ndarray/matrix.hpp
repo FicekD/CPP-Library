@@ -51,6 +51,45 @@ namespace ndarray {
                 std::memcpy(_data.get(), data.data(), _size * sizeof(T));
             }
         }
+        Matrix(std::vector<Matrix<T>> matrices, Dim concat_dim) {
+            if (matrices.size() == 0)
+                throw std::invalid_argument("Empty matrix vector to concat");
+            
+            if (concat_dim == ROWS) {
+                _cols = matrices[0].cols();
+                _rows = 0;
+                for (const Matrix<T>& mat : matrices) {
+                    if (mat.cols() != _cols)
+                        throw std::invalid_argument("Matrix column missmatch");
+                    _rows += mat.rows();
+                }
+                _size = _rows * _cols;
+                _data = std::unique_ptr<T>(new T[_size]);
+                std::size_t ptr = 0;
+                for (const Matrix<T>& mat : matrices) {
+                    std::memcpy(_data.get() + ptr, mat._data.get(), mat._size * sizeof(T));
+                    ptr += mat._size;
+                }
+            }
+            else {
+                _cols = 0;
+                _rows = matrices[0].rows();
+                for (const Matrix<T>& mat : matrices) {
+                    if (mat.rows() != _rows)
+                        throw std::invalid_argument("Matrix row missmatch");
+                    _cols += mat.cols();
+                }
+                _size = _rows * _cols;
+                _data = std::unique_ptr<T>(new T[_size]);
+                std::size_t ptr = 0;
+                for (std::size_t row = 0; row < _rows; row++) {
+                    for (const Matrix<T>& mat : matrices) {
+                        std::memcpy(_data.get() + ptr, mat._data.get() + row * mat._cols, mat._cols * sizeof(T));
+                        ptr += mat._cols;
+                    }
+                }
+            }
+        }
 
         static Matrix<T> eye(std::size_t dim_size, int k = 0) {
             size_t abs_k = std::abs(k);
@@ -809,8 +848,28 @@ namespace ndarray {
             this->reshape(_cols, _rows);
         }
 
-        Matrix<T> dot(const Matrix<T>& matrix) const;
-        Matrix<T> inverse() const;
+        Matrix<T> dot(const Matrix<T>& matrix) const {
+            if (this->_cols != matrix.rows())
+                throw std::invalid_argument("Matricies shape missmatch");
+            
+            Matrix<T> result(_rows, matrix.cols());
+            for (std::size_t row = 0; row < _rows; row++) {
+                for (std::size_t col = 0; col < matrix.cols(); col++) {
+                    T sum = T(0);
+                    for (std::size_t i = 0; i < _cols; i++) {
+                        sum += this->at(row, i) * matrix.at(i, col);
+                    }
+                    result.at(row, col) = sum;
+                }
+            }
+            return result;
+        }
+        Matrix<T> inverse() const {
+            if (_rows != _cols)
+                throw std::invalid_argument("Matrix has to be square");
+            
+            Matrix<T> expanded(std::vector<Matrix<T>> { *this, Matrix<T>::eye(_rows) }, COLS);
+        }
         Matrix<T> pseudo_inverse() const;
 
         std::tuple<Matrix<T>, Matrix<T>> eig() const;
