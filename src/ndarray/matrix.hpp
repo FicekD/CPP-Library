@@ -11,6 +11,8 @@
 #include <format>
 #include <algorithm>
 
+constexpr double M_PI = 3.141592653589793238463;
+
 namespace ndarray {
     enum Dim {
         ROWS, COLS

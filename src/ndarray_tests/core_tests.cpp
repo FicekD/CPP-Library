@@ -98,6 +98,42 @@ namespace core_tests
 			for (int i = 0; i < matrix_origin.size(); i++)
 				Assert::AreEqual(i, matrix_move.get(i));
 		}
+		TEST_METHOD(ConstructorRowConcat) {
+			ndarray::Matrix<int> mat1(5, 7);
+			ndarray::Matrix<int> mat2(2, 7);
+			ndarray::Matrix<int> mat3(4, 7);
+
+			ndarray::Matrix<int> concatted(std::vector<ndarray::Matrix<int>> { mat1, mat2, mat3 }, ndarray::ROWS);
+
+			Assert::AreEqual(mat1.rows() + mat2.rows() + mat3.rows(), concatted.rows());
+			Assert::AreEqual(mat1.cols(), concatted.cols());
+
+			ndarray::Matrix<int> submat1 = concatted.sub_matrix(0, mat1.rows(), 0, mat1.cols());
+			ndarray::Matrix<int> submat2 = concatted.sub_matrix(mat1.rows(), mat1.rows() + mat2.rows(), 0, mat1.cols());
+			ndarray::Matrix<int> submat3 = concatted.sub_matrix(mat1.rows() + mat2.rows(), mat1.rows() + mat2.rows() + mat3.rows(), 0, mat1.cols());
+
+			Assert::IsTrue((mat1 == submat1).reduce_all());
+			Assert::IsTrue((mat2 == submat2).reduce_all());
+			Assert::IsTrue((mat3 == submat3).reduce_all());
+		}
+		TEST_METHOD(ConstructorColConcat) {
+			ndarray::Matrix<int> mat1(7, 5);
+			ndarray::Matrix<int> mat2(7, 2);
+			ndarray::Matrix<int> mat3(7, 4);
+
+			ndarray::Matrix<int> concatted(std::vector<ndarray::Matrix<int>> { mat1, mat2, mat3 }, ndarray::COLS);
+
+			Assert::AreEqual(mat1.cols() + mat2.cols() + mat3.cols(), concatted.cols());
+			Assert::AreEqual(mat1.rows(), concatted.rows());
+
+			ndarray::Matrix<int> submat1 = concatted.sub_matrix(0, mat1.rows(), 0, mat1.cols());
+			ndarray::Matrix<int> submat2 = concatted.sub_matrix(0, mat1.rows(), mat1.cols(), mat1.cols() + mat2.cols());
+			ndarray::Matrix<int> submat3 = concatted.sub_matrix(0, mat1.rows(), mat1.cols() + mat2.cols(), mat1.cols() + mat2.cols() + mat3.cols());
+
+			Assert::IsTrue((mat1 == submat1).reduce_all());
+			Assert::IsTrue((mat2 == submat2).reduce_all());
+			Assert::IsTrue((mat3 == submat3).reduce_all());
+		}
 		TEST_METHOD(ConstructorStaticEye) {
 			std::size_t size = 9;
 			ndarray::Matrix<int> eye_k_0 = ndarray::Matrix<int>::eye(size, 0);
