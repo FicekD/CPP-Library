@@ -11,18 +11,18 @@
 #include <format>
 #include <algorithm>
 
-constexpr double M_PI = 3.141592653589793238463;
+constexpr double PI = 3.141592653589793238463;
 
 namespace ndarray {
 	
 	template <typename T>
 	class Array {
-	private:
+	protected:
 		std::unique_ptr<T> _data = nullptr;
 		std::size_t _size = 0;
 	public:
-		Array() {}
-		Array(const Arrat<T>& arr) : _size(arr.size) {
+        Array() {}
+		Array(const Array<T>& arr) : _size(arr._size) {
 			if (_size > 0) {
 				_data = std::unique_ptr<T>(new T[arr._size]);
 				std::memcpy(_data.get(), arr._data.get(), arr._size * sizeof(T));
@@ -41,7 +41,7 @@ namespace ndarray {
 
 		void clear() {
 			_data.release();
-			_size = 0; _rows = 0; _cols = 0;
+			_size = 0;
 		}
 		void fill(const T& scalar) {
 			for (std::size_t i = 0; i < _size; i++)
@@ -50,208 +50,143 @@ namespace ndarray {
 
 		T get(std::size_t x) const {
 			if (x >= _size)
-				throw std::invalid_argument("Indices out of bounds");
+				throw std::invalid_argument("Index out of bounds");
 			return _data.get()[x];
 		}
 		T& at(std::size_t x) {
 			if (x >= _size)
-				throw std::invalid_argument("Indices out of bounds");
+				throw std::invalid_argument("Index out of bounds");
 			return _data.get()[x];
 		}
 
-        void add_inplace(const T& scalar) {
+        template <typename T1, typename T2>
+        static void _except_on_size_mismatch(const Array<T1>& arr1, const Array<T2>& arr2) {
+            if (arr1._size != arr2._size)
+                throw std::invalid_argument("Size mismatch");
+        }
+        void map_inplace(const std::function<T(const T&)>& lambda) {
             for (int i = 0; i < _size; i++) {
-                this->at(i) += scalar;
+                T& ref = this->at(i);
+                ref = lambda(ref);
             }
         }
-        void add_inplace(const Matrix<T>& matrix) {
-            if (matrix._rows != _rows || matrix._cols != _cols)
-                throw std::invalid_argument("Matricies shape missmatch");
+        void map_inplace(const std::function<T(const T&, const T&)>& lambda, const Array<T>& arr) {
+            _except_on_size_mismatch<T, T>(*this, arr);
             for (int i = 0; i < _size; i++) {
-                this->at(i) += matrix.get(i);
+                T& ref = this->at(i);
+                ref = lambda(ref, arr.get(i));
             }
         }
-        void subtract_inplace(const T& scalar) {
+        template <typename R = T>
+        void map_to(const std::function<R(const T&)>& lambda, Array<R>& target) const {
+            _except_on_size_mismatch<T, R>(*this, target);
             for (int i = 0; i < _size; i++) {
-                this->at(i) -= scalar;
+                target.at(i) = lambda(this->at(i));
             }
         }
-        void subtract_inplace(const Matrix<T>& matrix) {
-            if (matrix._rows != _rows || matrix._cols != _cols)
-                throw std::invalid_argument("Matricies shape missmatch");
+        template <typename R = T>
+        void map_to(const std::function<R(const T&, const T&)>& lambda, const Array<T>& arr, Array<R>& target) const {
+            _except_on_size_mismatch<T, T>(*this, arr);
+            _except_on_size_mismatch<T, R>(*this, target);
             for (int i = 0; i < _size; i++) {
-                this->at(i) -= matrix.get(i);
-            }
-        }
-        void multiply_inplace(const T& scalar) {
-            for (int i = 0; i < _size; i++) {
-                this->at(i) *= scalar;
-            }
-        }
-        void multiply_inplace(const Matrix<T>& matrix) {
-            if (matrix._rows != _rows || matrix._cols != _cols)
-                throw std::invalid_argument("Matricies shape missmatch");
-            for (int i = 0; i < _size; i++) {
-                this->at(i) *= matrix.get(i);
-            }
-        }
-        void divide_inplace(const T& scalar) {
-            for (int i = 0; i < _size; i++) {
-                this->at(i) /= scalar;
-            }
-        }
-        void divide_inplace(const Matrix<T>& matrix) {
-            if (matrix._rows != _rows || matrix._cols != _cols)
-                throw std::invalid_argument("Matricies shape missmatch");
-            for (int i = 0; i < _size; i++) {
-                this->at(i) /= matrix.get(i);
-            }
-        }
-        void square_inplace() {
-            for (int i = 0; i < _size; i++) {
-                T& at_ref = this->at(i);
-                at_ref = at_ref * at_ref;
-            }
-        }
-        void sqrt_inplace() {
-            for (int i = 0; i < _size; i++) {
-                T& at_ref = this->at(i);
-                at_ref = static_cast<T>(std::sqrt(at_ref));
-            }
-        }
-        void pow_inplace(double power) {
-            for (int i = 0; i < _size; i++) {
-                T& at_ref = this->at(i);
-                at_ref = static_cast<T>(std::pow(at_ref, power));
+                target.at(i) = lambda(this->get(i), arr.get(i));
             }
         }
 
+        void add_inplace(const T& scalar) {
+            map_inplace([scalar](const T& x) -> T { return x + scalar; });
+        }
+        void add_inplace(const Array<T>& arr) {
+            map_inplace([](const T& x1, const T& x2) -> T { return x1 + x2; }, arr);
+        }
+        void subtract_inplace(const T& scalar) {
+            map_inplace([scalar](const T& x) -> T { return x - scalar; });
+        }
+        void subtract_inplace(const Array<T>& arr) {
+            map_inplace([](const T& x1, const T& x2) -> T { return x1 - x2; }, arr);
+        }
+        void multiply_inplace(const T& scalar) {
+            map_inplace([scalar](const T& x) -> T { return x * scalar; });
+        }
+        void multiply_inplace(const Array<T>& arr) {
+            map_inplace([](const T& x1, const T& x2) -> T { return x1 * x2; }, arr);
+        }
+        void divide_inplace(const T& scalar) {
+            map_inplace([scalar](const T& x) -> T { return x / scalar; });
+        }
+        void divide_inplace(const Array<T>& arr) {
+            map_inplace([](const T& x1, const T& x2) -> T { return x1 / x2; }, arr);
+        }
+        void square_inplace() {
+            map_inplace([](const T& x) -> T { return x * x; });
+        }
+        void sqrt_inplace() {
+            map_inplace([](const T& x) -> T { return static_cast<T>(std::sqrt(x)); });
+        }
+        void pow_inplace(double power) {
+            map_inplace([power](const T& x) -> T { return static_cast<T>(std::pow(x, power)); });
+        }
         void exp_inplace() {
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = std::exp(ref);
-            }
+            map_inplace([](const T& x) -> T { return std::exp(x); });
         }
         void exp2_inplace() {
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = std::exp2(ref);
-            }
+            map_inplace([](const T& x) -> T { return std::exp2(x); });
         }
         void exp10_inplace() {
-            T ten = T(10);
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = std::pow(ten, ref);
-            }
+            map_inplace([](const T& x) -> T { return std::pow(T(10), x); });
         }
         void log_inplace() {
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = std::log(ref);
-            }
+            map_inplace([](const T& x) -> T { return std::log(x); });
         }
         void log2_inplace() {
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = std::log2(ref);
-            }
+            map_inplace([](const T& x) -> T { return std::log2(x); });
         }
         void log10_inplace() {
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = std::log10(ref);
-            }
+            map_inplace([](const T& x) -> T { return std::log10(x); });
         }
 
         void sin_inplace() {
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = std::sin(ref);
-            }
+            map_inplace([](const T& x) -> T { return std::sin(x); });
         }
         void cos_inplace() {
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = std::cos(ref);
-            }
+            map_inplace([](const T& x) -> T { return std::cos(x); });
         }
         void tan_inplace() {
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = std::tan(ref);
-            }
+            map_inplace([](const T& x) -> T { return std::tan(x); });
         }
         void arcsin_inplace() {
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = std::asin(ref);
-            }
+            map_inplace([](const T& x) -> T { return std::asin(x); });
         }
         void arccos_inplace() {
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = std::acos(ref);
-            }
+            map_inplace([](const T& x) -> T { return std::acos(x); });
         }
         void arctan_inplace() {
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = std::atan(ref);
-            }
+            map_inplace([](const T& x) -> T { return std::atan(x); });
         }
-
         void deg2rad_inplace() {
-            T coeff = T(M_PI / 180.0);
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = ref * coeff;
-            }
+            map_inplace([](const T& x) -> T { return x * T(PI / 180.0); });
         }
         void rad2deg_inplace() {
-            T coeff = T(180.0 / M_PI);
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = ref * coeff;
-            }
+            map_inplace([](const T& x) -> T { return x * T(180.0 / PI); });
         }
 
         void abs_inplace() {
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = std::abs(ref);
-            }
+            map_inplace([](const T& x) -> T { return std::abs(x); });
         }
         void clamp_inplace(const T& min, const T& max) {
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = std::clamp(ref, min, max);
-            }
+            map_inplace([min, max](const T& x) -> T { return std::clamp(x, min, max); });
         }
-
         void round_inplace() {
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = std::round(ref);
-            }
+            map_inplace([](const T& x) -> T { return std::round(x); });
         }
         void floor_inplace() {
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = std::floor(ref);
-            }
+            map_inplace([](const T& x) -> T { return std::floor(x); });
         }
         void ceil_inplace() {
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = std::ceil(ref);
-            }
+            map_inplace([](const T& x) -> T { return std::ceil(x); });
         }
         void trunc_inplace() {
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = std::trunc(ref);
-            }
+            map_inplace([](const T& x) -> T { return std::trunc(x); });
         }
 
         T reduce_sum() const {

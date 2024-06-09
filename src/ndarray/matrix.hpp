@@ -11,7 +11,7 @@
 #include <format>
 #include <algorithm>
 
-constexpr double M_PI = 3.141592653589793238463;
+#include "array.hpp"
 
 namespace ndarray {
     enum Dim {
@@ -19,38 +19,38 @@ namespace ndarray {
     };
 
     template <typename T>
-    class Matrix {
+    class Matrix : public Array<T> {
     private:
-        std::unique_ptr<T> _data = nullptr;
         std::size_t _rows = 0, _cols = 0;
-        std::size_t _size = 0;
     public:
+
 #pragma region CONSTRUCTORS
         Matrix() {}
-        Matrix(const Matrix<T>& matrix) : _rows(matrix._rows), _cols(matrix._cols), _size(matrix._size) {
-            if (_size > 0) {
-                _data = std::unique_ptr<T>(new T[matrix._size]);
-                std::memcpy(_data.get(), matrix._data.get(), matrix._size * sizeof(T));
+        Matrix(const Matrix<T>& matrix) : _rows(matrix._rows), _cols(matrix._cols), Array<T>(matrix.size()) {
+            if (size() > 0) {
+                Array<T>::_data = std::unique_ptr<T>(new T[matrix.size()]);
+                std::memcpy(Array<T>::_data.get(), matrix.Array<T>::_data.get(), matrix.size() * sizeof(T));
             }
         }
-        Matrix(Matrix<T>&& matrix) noexcept : _rows(matrix._rows), _cols(matrix._cols), _size(matrix._size) {
-            _data = std::move(matrix._data);
+        Matrix(Matrix<T>&& matrix) noexcept : _rows(matrix._rows), _cols(matrix._cols), Array<T>() {
+            Array<T>::_size = matrix.size();
+            Array<T>::_data = std::move(matrix.Array<T>::_data);
             matrix.clear();
         }
-        Matrix(std::size_t rows, std::size_t cols) : _rows(rows), _cols(cols), _size(cols * rows) {
-            if (_size > 0)
-                _data = std::unique_ptr<T>(new T[_size] { T() });
+        Matrix(std::size_t rows, std::size_t cols) : _rows(rows), _cols(cols), Array<T>(cols * rows) {
+            if (size() > 0)
+                Array<T>::_data = std::unique_ptr<T>(new T[size()] { T() });
         }
-        Matrix(std::size_t rows, std::size_t cols, T* data) : _rows(rows), _cols(cols), _size(cols * rows) {
-            if (_size > 0) {
-                _data = std::unique_ptr<T>(new T[_size]);
-                std::memcpy(_data.get(), data, _size * sizeof(T));
+        Matrix(std::size_t rows, std::size_t cols, T* data) : _rows(rows), _cols(cols), Array<T>(cols * rows) {
+            if (size() > 0) {
+                Array<T>::_data = std::unique_ptr<T>(new T[size()]);
+                std::memcpy(Array<T>::_data.get(), data, size() * sizeof(T));
             }
         }
-        Matrix(std::size_t rows, std::size_t cols, const std::vector<T>& data) : _rows(rows), _cols(cols), _size(cols * rows) {
-            if (_size > 0) {
-                _data = std::unique_ptr<T>(new T[_size]);
-                std::memcpy(_data.get(), data.data(), _size * sizeof(T));
+        Matrix(std::size_t rows, std::size_t cols, const std::vector<T>& data) : _rows(rows), _cols(cols), Array<T>(cols * rows) {
+            if (size() > 0) {
+                Array<T>::_data = std::unique_ptr<T>(new T[size()]);
+                std::memcpy(Array<T>::_data.get(), data.data(), size() * sizeof(T));
             }
         }
         Matrix(std::vector<Matrix<T>> matrices, Dim concat_dim) {
@@ -65,12 +65,12 @@ namespace ndarray {
                         throw std::invalid_argument("Matrix column missmatch");
                     _rows += mat.rows();
                 }
-                _size = _rows * _cols;
-                _data = std::unique_ptr<T>(new T[_size]);
+                Array<T>::_size = _rows * _cols;
+                Array<T>::_data = std::unique_ptr<T>(new T[size()]);
                 std::size_t ptr = 0;
                 for (const Matrix<T>& mat : matrices) {
-                    std::memcpy(_data.get() + ptr, mat._data.get(), mat._size * sizeof(T));
-                    ptr += mat._size;
+                    std::memcpy(Array<T>::_data.get() + ptr, mat.Array<T>::_data.get(), mat.size() * sizeof(T));
+                    ptr += mat.size();
                 }
             }
             else {
@@ -81,12 +81,12 @@ namespace ndarray {
                         throw std::invalid_argument("Matrix row missmatch");
                     _cols += mat.cols();
                 }
-                _size = _rows * _cols;
-                _data = std::unique_ptr<T>(new T[_size]);
+                Array<T>::_size = _rows * _cols;
+                Array<T>::_data = std::unique_ptr<T>(new T[size()]);
                 std::size_t ptr = 0;
                 for (std::size_t row = 0; row < _rows; row++) {
                     for (const Matrix<T>& mat : matrices) {
-                        std::memcpy(_data.get() + ptr, mat._data.get() + row * mat._cols, mat._cols * sizeof(T));
+                        std::memcpy(Array<T>::_data.get() + ptr, mat.Array<T>::_data.get() + row * mat._cols, mat._cols * sizeof(T));
                         ptr += mat._cols;
                     }
                 }
@@ -113,37 +113,34 @@ namespace ndarray {
 #pragma endregion CONSTRUCTORS
 
 #pragma region CORE
+        using Array<T>::size;
+        using Array<T>::at;
+        using Array<T>::get;
+        using Array<T>::fill;
+
         std::size_t rows() const { return _rows; }
         std::size_t cols() const { return _cols; }
-        std::size_t size() const { return _size; }
 
         void clear() {
-            _data.release();
-            _size = 0; _rows = 0; _cols = 0;
+            _rows = 0;
+            _cols = 0;
+            Array<T>::clear();
         }
-        void fill(const T& scalar) {
-            for (std::size_t i = 0; i < _size; i++)
-                this->at(i) = scalar;
+
+        template <typename T1, typename T2>
+        static void _except_on_2d_mismatch(const Matrix<T1>& m1, const Matrix<T2>& m2) {
+            if (m1._rows != m2._rows || m1._cols != m2._cols)
+                throw std::invalid_argument("Matricies shape mismatch");
         }
 
         std::size_t ravel_indices(std::size_t row, std::size_t col) const {
             return row * _cols + col;
         }
 
-        T get(std::size_t x) const {
-            if (x >= _size)
-                throw std::invalid_argument("Indices out of bounds");
-            return _data.get()[x];
-        }
         T get(std::size_t row, std::size_t col) const {
             if (row >= _rows || col >= _cols)
                 throw std::invalid_argument("Indices out of bounds");
             return get(ravel_indices(row, col));
-        }
-        T& at(std::size_t x) {
-            if (x >= _size)
-                throw std::invalid_argument("Indices out of bounds");
-            return _data.get()[x];
         }
         T& at(std::size_t row, std::size_t col) {
             if (row >= _rows || col >= _cols)
@@ -152,16 +149,16 @@ namespace ndarray {
         }
 
         void reshape(std::size_t rows, std::size_t cols) {
-            if (rows * cols != _size)
+            if (rows * cols != size())
                 throw std::invalid_argument(std::format("Reshape missmatch [{}x{}] -> [{}x{}]", _rows, _cols, rows, cols));
             _rows = rows;
             _cols = cols;
         }
         
         template<typename U>
-        Matrix<U> astype() {
+        Matrix<U> astype() const {
             Matrix<U> result(_rows, _cols);
-            for (int i = 0; i < _size; i++)
+            for (int i = 0; i < size(); i++)
                 result.at(i) = static_cast<U>(this->get(i));
             return result;
         }
@@ -179,585 +176,242 @@ namespace ndarray {
 
 #pragma endregion CORE
 
-#pragma region ARITHMETIC_OPS
+#pragma region MATH_OPS
+
+        using Array<T>::add_inplace;
+        using Array<T>::subtract_inplace;
+        using Array<T>::multiply_inplace;
+        using Array<T>::divide_inplace;
+        using Array<T>::square_inplace;
+        using Array<T>::sqrt_inplace;
+        using Array<T>::pow_inplace;
+        using Array<T>::exp_inplace;
+        using Array<T>::exp2_inplace;
+        using Array<T>::exp10_inplace;
+        using Array<T>::log_inplace;
+        using Array<T>::log2_inplace;
+        using Array<T>::log10_inplace;
+
+        using Array<T>::sin_inplace;
+        using Array<T>::cos_inplace;
+        using Array<T>::tan_inplace;
+        using Array<T>::arcsin_inplace;
+        using Array<T>::arccos_inplace;
+        using Array<T>::arctan_inplace;
+        using Array<T>::deg2rad_inplace;
+        using Array<T>::rad2deg_inplace;
+        
+        using Array<T>::abs_inplace;
+        using Array<T>::clamp_inplace;
+        using Array<T>::round_inplace;
+        using Array<T>::floor_inplace;
+        using Array<T>::ceil_inplace;
+        using Array<T>::trunc_inplace;
+
+        template <typename R = T>
+        Matrix<R> map_to_new(const std::function<R(const T&, const T&)>& lambda, const Matrix<T>& matrix) const {
+            Matrix::_except_on_2d_mismatch<T, T>(*this, matrix);
+            Matrix<R> result(_rows, _cols);
+            Array<T>::template map_to<R>(lambda, dynamic_cast<const Array<T>&>(matrix), dynamic_cast<Array<T>&>(result));
+            return result;
+        }
+        template <typename R = T>
+        Matrix<R> map_to_new(const std::function<R(const T&)>& lambda) const {
+            Matrix<R> result(_rows, _cols);
+            Array<T>::template map_to<R>(lambda, dynamic_cast<Array<T>&>(result));
+            return result;
+        }
         void operator=(const Matrix<T>& matrix) {
-            if (matrix._size != _size)
-                _data = std::unique_ptr<T>(new T[matrix._size]);
-            std::memcpy(_data.get(), matrix._data.get(), matrix._size * sizeof(T));
-            _size = matrix._size;
+            if (matrix.size() != size()) {
+                Array<T>::_data.release();
+                Array<T>::_data = std::unique_ptr<T>(new T[matrix.size()]);
+            }
+            std::memcpy(Array<T>::_data.get(), matrix.Array<T>::_data.get(), matrix.size() * sizeof(T));
+            Array<T>::_size = matrix.size();
             _rows = matrix._rows;
             _cols = matrix._cols;
         }
         Matrix<T> operator+(const Matrix<T>& matrix) const {
-            if (matrix._rows != _rows || matrix._cols != _cols)
-                throw std::invalid_argument("Matricies shape missmatch");
-            Matrix<T> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = this->get(i) + matrix.get(i);
-            return result;
+            return map_to_new<T>([](const T& x1, const T& x2) -> T { return x1 + x2; }, matrix);
         }
         Matrix<T> operator+(const T& scalar) const {
-            Matrix<T> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = this->get(i) + scalar;
-            return result;
+            return map_to_new([scalar](const T& x1) -> T { return x1 + scalar; });
         }
         Matrix<T> operator+() const {
             Matrix<T> result(*this);
             return result;
         }
         Matrix<T> operator-(const Matrix<T>& matrix) const {
-            if (matrix._rows != _rows || matrix._cols != _cols)
-                throw std::invalid_argument("Matricies shape missmatch");
-            Matrix<T> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = this->get(i) - matrix.get(i);
-            return result;
+            return map_to_new([](const T& x1, const T& x2) -> T { return x1 - x2; }, matrix);
         }
         Matrix<T> operator-(const T& scalar) const {
-            Matrix<T> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = this->get(i) - scalar;
-            return result;
+            return map_to_new([scalar](const T& x1) -> T { return x1 - scalar; });
         }
         Matrix<T> operator-() const {
-            Matrix<T> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = -(this->get(i));
-            return result;
+            return map_to_new([](const T& x1) -> T { return -x1; });
         }
         Matrix<T> operator*(const Matrix<T>& matrix) const {
-            if (matrix._rows != _rows || matrix._cols != _cols)
-                throw std::invalid_argument("Matricies shape missmatch");
-            Matrix<T> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = this->get(i) * matrix.get(i);
-            return result;
+            return map_to_new([](const T& x1, const T& x2) -> T { return x1 * x2; }, matrix);
         }
         Matrix<T> operator*(const T& scalar) const {
-            Matrix<T> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = this->get(i) * scalar;
-            return result;
+            return map_to_new([scalar](const T& x1) -> T { return x1 * scalar; });
         }
         Matrix<T> operator/(const Matrix<T>& matrix) const {
-            if (matrix._rows != _rows || matrix._cols != _cols)
-                throw std::invalid_argument("Matricies shape missmatch");
-            Matrix<T> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = this->get(i) / matrix.get(i);
-            return result;
+            return map_to_new([](const T& x1, const T& x2) -> T { return x1 / x2; }, matrix);
         }
         Matrix<T> operator/(const T& scalar) const {
-            Matrix<T> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = this->get(i) / scalar;
-            return result;
+            return map_to_new([scalar](const T& x1) -> T { return x1 / scalar; });
         }
         Matrix<T> square() const {
-            Matrix<T> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = this->get(i) * this->get(i);
-            return result;
+            return map_to_new([](const T& x1) -> T { return x1 * x1; });
         }
         Matrix<T> sqrt() const {
-            Matrix<T> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = static_cast<T>(std::sqrt(this->get(i)));
-            return result;
+            return map_to_new([](const T& x1) -> T { return std::sqrt(x1); });
         }
         Matrix<T> pow(double power) const {
-            Matrix<T> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = static_cast<T>(std::pow(this->get(i), power));
-            return result;
+            return map_to_new([power](const T& x1) -> T { return std::pow(x1, power); });
         }
-
-#pragma endregion ARITHMETIC_OPS
-        
-#pragma region INPLACE_ARITHMETIC_OPS
-        void add_inplace(const T& scalar) {
-            for (int i = 0; i < _size; i++) {
-                this->at(i) += scalar;
-            }
-        }
-        void add_inplace(const Matrix<T>& matrix) {
-            if (matrix._rows != _rows || matrix._cols != _cols)
-                throw std::invalid_argument("Matricies shape missmatch");
-            for (int i = 0; i < _size; i++) {
-                this->at(i) += matrix.get(i);
-            }
-        }
-        void subtract_inplace(const T& scalar) {
-            for (int i = 0; i < _size; i++) {
-                this->at(i) -= scalar;
-            }
-        }
-        void subtract_inplace(const Matrix<T>& matrix) {
-            if (matrix._rows != _rows || matrix._cols != _cols)
-                throw std::invalid_argument("Matricies shape missmatch");
-            for (int i = 0; i < _size; i++) {
-                this->at(i) -= matrix.get(i);
-            }
-        }
-        void multiply_inplace(const T& scalar) {
-            for (int i = 0; i < _size; i++) {
-                this->at(i) *= scalar;
-            }
-        }
-        void multiply_inplace(const Matrix<T>& matrix) {
-            if (matrix._rows != _rows || matrix._cols != _cols)
-                throw std::invalid_argument("Matricies shape missmatch");
-            for (int i = 0; i < _size; i++) {
-                this->at(i) *= matrix.get(i);
-            }
-        }
-        void divide_inplace(const T& scalar) {
-            for (int i = 0; i < _size; i++) {
-                this->at(i) /= scalar;
-            }
-        }
-        void divide_inplace(const Matrix<T>& matrix) {
-            if (matrix._rows != _rows || matrix._cols != _cols)
-                throw std::invalid_argument("Matricies shape missmatch");
-            for (int i = 0; i < _size; i++) {
-                this->at(i) /= matrix.get(i);
-            }
-        }
-        void square_inplace() {
-            for (int i = 0; i < _size; i++) {
-                T& at_ref = this->at(i);
-                at_ref = at_ref * at_ref;
-            }
-        }
-        void sqrt_inplace() {
-            for (int i = 0; i < _size; i++) {
-                T& at_ref = this->at(i);
-                at_ref = static_cast<T>(std::sqrt(at_ref));
-            }
-        }
-        void pow_inplace(double power) {
-            for (int i = 0; i < _size; i++) {
-                T& at_ref = this->at(i);
-                at_ref = static_cast<T>(std::pow(at_ref, power));
-            }
-        }
-#pragma endregion INPLACE_ARITHMETIC_OPS
-
-#pragma region MATH_OPS
         Matrix<T> exp() const {
-            Matrix<T> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = std::exp(this->at(i));
-            return result;
+            return map_to_new([](const T& x1) -> T { return std::exp(x1); });
         }
         Matrix<T> exp2() const {
-            Matrix<T> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = std::exp2(this->at(i));
-            return result;
+            return map_to_new([](const T& x1) -> T { return std::exp2(x1); });
         }
         Matrix<T> exp10() const {
-            Matrix<T> result(_rows, _cols);
-            T ten = T(10);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = std::pow(ten, this->at(i));
-            return result;
+            return map_to_new([](const T& x1) -> T { return pow(T(10), x1); });
         }
         Matrix<T> log() const {
-            Matrix<T> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = std::log(this->at(i));
-            return result;
+            return map_to_new([](const T& x1) -> T { return std::log(x1); });
         }
         Matrix<T> log2() const {
-            Matrix<T> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = std::log2(this->at(i));
-            return result;
+            return map_to_new([](const T& x1) -> T { return std::sqrt(x1); });
         }
         Matrix<T> log10() const {
-            Matrix<T> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = std::log10(this->at(i));
-            return result;
+            return map_to_new([](const T& x1) -> T { return std::log10(x1); });
         }
-
         Matrix<T> sin() const {
-            Matrix<T> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = std::sin(this->at(i));
-            return result;
+            return map_to_new([](const T& x1) -> T { return std::sin(x1); });
         }
         Matrix<T> cos() const {
-            Matrix<T> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = std::cos(this->at(i));
-            return result;
+            return map_to_new([](const T& x1) -> T { return std::cos(x1); });
         }
         Matrix<T> tan() const {
-            Matrix<T> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = std::tan(this->at(i));
-            return result;
+            return map_to_new([](const T& x1) -> T { return std::tan(x1); });
         }
         Matrix<T> arcsin() const {
-            Matrix<T> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = std::asin(this->at(i));
-            return result;
+            return map_to_new([](const T& x1) -> T { return std::asin(x1); });
         }
         Matrix<T> arccos() const {
-            Matrix<T> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = std::acos(this->at(i));
-            return result;
+            return map_to_new([](const T& x1) -> T { return std::acos(x1); });
         }
         Matrix<T> arctan() const {
-            Matrix<T> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = std::atan(this->at(i));
-            return result;
+            return map_to_new([](const T& x1) -> T { return std::atan(x1); });
         }
-
         Matrix<T> deg2rad() const {
-            Matrix<T> result(_rows, _cols);
-            T coeff = T(M_PI / 180.0);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = coeff * this->at(i);
-            return result;
+            return map_to_new([](const T& x1) -> T { x1 * T(PI / 180.0); });
         }
         Matrix<T> rad2deg() const {
-            Matrix<T> result(_rows, _cols);
-            T coeff = T(180.0 / M_PI);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = coeff * this->at(i);
-            return result;
+            return map_to_new([](const T& x1) -> T { x1 * T(180.0 / PI); });
         }
-
         Matrix<T> abs() const {
-            Matrix<T> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = std::abs(this->at(i));
-            return result;
+            return map_to_new([](const T& x1) -> T { return std::abs(x1); });
         }
         Matrix<int> sign() const {
-            Matrix<T> result(_rows, _cols);
-            T zero = T(0);
-            for (std::size_t i = 0; i < _size; i++) {
-                T val = this->at(i);
-                result.at(i) = (val > zero) - (val < zero);
-            }
-            return result;
+            return map_to_new([](const T& x1) -> T { (x1 > T(0)) - (x1 < T(0)); });
         }
         Matrix<T> clamp(const T& min, const T& max) const {
-            Matrix<T> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = std::clamp(this->at(i), min, max);
-            return result;
+            return map_to_new([min, max](const T& x1) -> T { return std::clamp(x1, min, max); });
         }
-
         Matrix<T> round() const {
-            Matrix<T> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = std::round(this->at(i));
-            return result;
+            return map_to_new([](const T& x1) -> T { return std::round(x1); });
         }
         Matrix<T> floor() const {
-            Matrix<T> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = std::floor(this->at(i));
-            return result;
+            return map_to_new([](const T& x1) -> T { return std::floor(x1); });
         }
         Matrix<T> ceil() const {
-            Matrix<T> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = std::ceil(this->at(i));
-            return result;
+            return map_to_new([](const T& x1) -> T { return std::ceil(x1); });
         }
         Matrix<T> trunc() const {
-            Matrix<T> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = std::trunc(this->at(i));
-            return result;
+            return map_to_new([](const T& x1) -> T { return std::trunc(x1); });
         }
 
 #pragma endregion MATH_OPS
 
-#pragma region MATH_OPS_INPLACE
-        void exp_inplace() {
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = std::exp(ref);
-            }
-        }
-        void exp2_inplace() {
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = std::exp2(ref);
-            }
-        }
-        void exp10_inplace() {
-            T ten = T(10);
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = std::pow(ten, ref);
-            }
-        }
-        void log_inplace() {
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = std::log(ref);
-            }
-        }
-        void log2_inplace() {
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = std::log2(ref);
-            }
-        }
-        void log10_inplace() {
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = std::log10(ref);
-            }
-        }
-
-        void sin_inplace() {
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = std::sin(ref);
-            }
-        }
-        void cos_inplace() {
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = std::cos(ref);
-            }
-        }
-        void tan_inplace() {
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = std::tan(ref);
-            }
-        }
-        void arcsin_inplace() {
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = std::asin(ref);
-            }
-        }
-        void arccos_inplace() {
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = std::acos(ref);
-            }
-        }
-        void arctan_inplace() {
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = std::atan(ref);
-            }
-        }
-
-        void deg2rad_inplace() {
-            T coeff = T(M_PI / 180.0);
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = ref * coeff;
-            }
-        }
-        void rad2deg_inplace() {
-            T coeff = T(180.0 / M_PI);
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = ref * coeff;
-            }
-        }
-
-        void abs_inplace() {
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = std::abs(ref);
-            }
-        }
-        void clamp_inplace(const T& min, const T& max) {
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = std::clamp(ref, min, max);
-            }
-        }
-
-        void round_inplace() {
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = std::round(ref);
-            }
-        }
-        void floor_inplace() {
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = std::floor(ref);
-            }
-        }
-        void ceil_inplace() {
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = std::ceil(ref);
-            }
-        }
-        void trunc_inplace() {
-            for (std::size_t i = 0; i < _size; i++) {
-                T& ref = this->at(i);
-                ref = std::trunc(ref);
-            }
-        }
-
-#pragma endregion MATH_OPS_INPLACE
-
 #pragma region LOGICAL_OPS
         Matrix<bool> operator<(const Matrix<T>& matrix) const {
-            if (matrix._rows != _rows || matrix._cols != _cols)
-                throw std::invalid_argument("Matricies shape missmatch");
-            Matrix<bool> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = this->get(i) < matrix.get(i);
-            return result;
+            return map_to_new<bool>([](const T& x1, const T& x2) -> bool { return x1 < x2; }, matrix);
         }
         Matrix<bool> operator<(const T& scalar) const {
-            Matrix<bool> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = this->get(i) < scalar;
-            return result;
+            return map_to_new<bool>([scalar](const T& x1) -> bool { return x1 < scalar; });
         }
         Matrix<bool> operator<=(const Matrix<T>& matrix) const {
-            if (matrix._rows != _rows || matrix._cols != _cols)
-                throw std::invalid_argument("Matricies shape missmatch");
-            Matrix<bool> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = this->get(i) <= matrix.get(i);
-            return result;
+            return map_to_new<bool>([](const T& x1, const T& x2) -> bool { return x1 <= x2; }, matrix);
         }
         Matrix<bool> operator<=(const T& scalar) const {
-            Matrix<bool> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = this->get(i) <= scalar;
-            return result;
+            return map_to_new<bool>([scalar](const T& x1) -> bool { return x1 <= scalar; });
         }
         Matrix<bool> operator>(const Matrix<T>& matrix) const {
-            if (matrix._rows != _rows || matrix._cols != _cols)
-                throw std::invalid_argument("Matricies shape missmatch");
-            Matrix<bool> result(_rows, _cols);
-            for (std::size_t i = 0; i > _size; i++)
-                result.at(i) = this->get(i) > matrix.get(i);
-            return result;
+            return map_to_new<bool>([](const T& x1, const T& x2) -> bool { return x1 > x2; }, matrix);
         }
         Matrix<bool> operator>(const T& scalar) const {
-            Matrix<bool> result(_rows, _cols);
-            for (std::size_t i = 0; i > _size; i++)
-                result.at(i) = this->get(i) > scalar;
-            return result;
+            return map_to_new<bool>([scalar](const T& x1) -> bool { return x1 > scalar; });
         }
         Matrix<bool> operator>=(const Matrix<T>& matrix) const {
-            if (matrix._rows != _rows || matrix._cols != _cols)
-                throw std::invalid_argument("Matricies shape missmatch");
-            Matrix<bool> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = this->get(i) >= matrix.get(i);
-            return result;
+            return map_to_new<bool>([](const T& x1, const T& x2) -> bool { return x1 >= x2; }, matrix);
         }
         Matrix<bool> operator>=(const T& scalar) const {
-            Matrix<bool> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = this->get(i) >= scalar;
-            return result;
+            return map_to_new<bool>([scalar](const T& x1) -> bool { return x1 >= scalar; });
         }
         Matrix<bool> operator==(const Matrix<T>& matrix) const {
-            if (matrix._rows != _rows || matrix._cols != _cols)
-                throw std::invalid_argument("Matricies shape missmatch");
-            Matrix<bool> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = this->get(i) == matrix.get(i);
-            return result;
+            return map_to_new<bool>([](const T& x1, const T& x2) -> bool { return x1 == x2; }, matrix);
         }
         Matrix<bool> operator==(const T& scalar) const {
-            Matrix<bool> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = this->get(i) == scalar;
-            return result;
+            return map_to_new<bool>([scalar](const T& x1) -> bool { return x1 == scalar; });
         }
         Matrix<bool> operator!=(const Matrix<T>& matrix) const {
-            if (matrix._rows != _rows || matrix._cols != _cols)
-                throw std::invalid_argument("Matricies shape missmatch");
-            Matrix<bool> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = this->get(i) != matrix.get(i);
-            return result;
+            return map_to_new<bool>([](const T& x1, const T& x2) -> bool { return x1 != x2; }, matrix);
         }
         Matrix<bool> operator!=(const T& scalar) const {
-            Matrix<bool> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = this->get(i) != scalar;
-            return result;
+            return map_to_new<bool>([scalar](const T& x1) -> bool { return x1 != scalar; });
         }
-        Matrix<bool> operator^(const Matrix<bool>& matrix) const {
-            if (matrix.rows() != _rows || matrix.cols() != _cols)
-                throw std::invalid_argument("Matricies shape missmatch");
-            Matrix<bool> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = this->get(i) ^ matrix.get(i);
-            return result;
+        Matrix<bool> operator^(const Matrix<T>& matrix) const {
+            return map_to_new<bool>([](const T& x1, const T& x2) -> bool { return x1 ^ x2; }, matrix);
         }
-        Matrix<bool> operator^(bool scalar) const {
-            Matrix<bool> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = this->get(i) ^ scalar;
-            return result;
+        Matrix<bool> operator^(const T& scalar) const {
+            return map_to_new<bool>([scalar](const T& x1) -> bool { return x1 ^ scalar; });
         }
-        Matrix<bool> operator||(const Matrix<bool>& matrix) const {
-            if (matrix.rows() != _rows || matrix.cols() != _cols)
-                throw std::invalid_argument("Matricies shape missmatch");
-            Matrix<bool> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = this->get(i) || matrix.get(i);
-            return result;
+        Matrix<bool> operator||(const Matrix<T>& matrix) const {
+            return map_to_new<bool>([](const T& x1, const T& x2) -> bool { return x1 || x2; }, matrix);
         }
-        Matrix<bool> operator||(bool scalar) const {
-            Matrix<bool> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = this->get(i) || scalar;
-            return result;
+        Matrix<bool> operator||(const T& scalar) const {
+            return map_to_new<bool>([scalar](const T& x1) -> bool { return x1 || scalar; });
         }
-        Matrix<bool> operator&&(const Matrix<bool>& matrix) const {
-            if (matrix.rows() != _rows || matrix.cols() != _cols)
-                throw std::invalid_argument("Matricies shape missmatch");
-            Matrix<bool> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = this->get(i) && matrix.get(i);
-            return result;
+        Matrix<bool> operator&&(const Matrix<T>& matrix) const {
+            return map_to_new<bool>([](const T& x1, const T& x2) -> bool { return x1 && x2; }, matrix);
         }
-        Matrix<bool> operator&&(bool scalar) const {
-            Matrix<bool> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = this->get(i) && scalar;
-            return result;
+        Matrix<bool> operator&&(const T& scalar) const {
+            return map_to_new<bool>([scalar](const T& x1) -> bool { return x1 && scalar; });
         }
         Matrix<bool> operator!() const {
-            Matrix<bool> result(_rows, _cols);
-            for (std::size_t i = 0; i < _size; i++)
-                result.at(i) = !this->get(i);
-            return result;
+            return map_to_new<bool>([](const T& x1) -> bool { return !x1; });
         }
 #pragma endregion LOGICAL_OPS
         
 #pragma region REDUCE
+        using Array<T>::reduce_sum;
+        using Array<T>::reduce_prod;
+        using Array<T>::reduce_max;
+        using Array<T>::reduce_min;
+        using Array<T>::reduce_any;
+        using Array<T>::reduce_all;
+        
         template<typename R>
         Matrix<R> reduce_rows(const std::function<R(const R&, const T&)>& lambda, const R& initializer) const {
             Matrix<R> result(1, _cols);
             result.fill(initializer);
             for (std::size_t row = 0; row < _rows; row++) {
                 for (std::size_t col = 0; col < _cols; col++) {
-                    R& at_col = result.at(col);
+                    R& at_col = result.Array<R>::at(col);
                     at_col = lambda(at_col, this->get(row, col));
                 }
             }
@@ -769,7 +423,7 @@ namespace ndarray {
             result.fill(initializer);
             for (std::size_t row = 0; row < _rows; row++) {
                 for (std::size_t col = 0; col < _cols; col++) {
-                    R& at_row = result.at(row);
+                    R& at_row = result.Array<R>::at(row);
                     at_row = lambda(at_row, this->get(row, col));
                 }
             }
@@ -784,47 +438,23 @@ namespace ndarray {
                 return reduce_cols<R>(lambda, initializer);
             }
         }
-        T reduce_sum() const {
-            return std::reduce(_data.get(), _data.get() + _size, T(0), [](const T& x0, const T& x1) -> T { return x0 + x1; });
-        }
         Matrix<T> reduce_sum(Dim dim) const {
-            auto reduce_func = [](const T& x0, const T& x1) -> T { return x0 + x1; };
-            return reduce<T>(reduce_func, dim, T(0));
-        }
-        T reduce_prod() const {
-            return std::reduce(_data.get(), _data.get() + _size, T(1), [](const T& x0, const T& x1) -> T { return x0 * x1; });
+            return reduce<T>([](const T& x0, const T& x1) -> T { return x0 + x1; }, dim, T(0));
         }
         Matrix<T> reduce_prod(Dim dim) const {
-            auto reduce_func = [](const T& x0, const T& x1) -> T { return x0 * x1; };
-            return reduce<T>(reduce_func, dim, T(1));
-        }
-        T reduce_max() const {
-            return std::reduce(_data.get(), _data.get() + _size, T(-INFINITY), [](const T& x0, const T& x1) -> T { return x0 > x1 ? x0 : x1; });
+            return reduce<T>([](const T& x0, const T& x1) -> T { return x0 * x1; }, dim, T(1));
         }
         Matrix<T> reduce_max(Dim dim) const {
-            auto reduce_func = [](const T& x0, const T& x1) -> T { return x0 > x1 ? x0 : x1; };
-            return reduce<T>(reduce_func, dim, T(-INFINITY));
-        }
-        T reduce_min() const {
-            return std::reduce(_data.get(), _data.get() + _size, T(INFINITY), [](const T& x0, const T& x1) -> T { return x0 < x1 ? x0 : x1; });
+            return reduce<T>([](const T& x0, const T& x1) -> T { return x0 > x1 ? x0 : x1; }, dim, T(-INFINITY));
         }
         Matrix<T> reduce_min(Dim dim) const {
-            auto reduce_func = [](const T& x0, const T& x1) -> T { return x0 < x1 ? x0 : x1; };
-            return reduce<T>(reduce_func, dim, T(INFINITY));
-        }
-        bool reduce_any() const {
-            return std::reduce(_data.get(), _data.get() + _size, false, [](bool x0, const T& x1) -> T { return x0 || x1 != 0; });
+            return reduce<T>([](const T& x0, const T& x1) -> T { return x0 < x1 ? x0 : x1; }, dim, T(INFINITY));
         }
         Matrix<bool> reduce_any(Dim dim) const {
-            auto reduce_func = [](const T& x0, const T& x1) -> T { return x0 || x1 != 0; };
-            return reduce<bool>(reduce_func, dim, false);
-        }
-        bool reduce_all() const {
-            return std::reduce(_data.get(), _data.get() + _size, true, [](bool x0, const T& x1) -> T { return x0 && x1 != 0; });
+            return reduce<bool>([](const T& x0, const T& x1) -> T { return x0 || x1 != 0; }, dim, false);
         }
         Matrix<bool> reduce_all(Dim dim) const {
-            auto reduce_func = [](const T& x0, const T& x1) -> T { return x0 && x1 != 0; };
-            return reduce<bool>(reduce_func, dim, true);
+            return reduce<bool>([](const T& x0, const T& x1) -> T { return x0 && x1 != 0; }, dim, true);
         }
 
 #pragma endregion REDUCE
@@ -1003,7 +633,7 @@ namespace ndarray {
         };
 
         MatrixIterator begin() const { return MatrixIterator(const_cast<Matrix*>(this), ROWS, 0, 0, _rows, 0, _cols); }
-        MatrixIterator end() const { return MatrixIterator(const_cast<Matrix*>(this), ROWS, _size, 0, _rows, 0, _cols); }
+        MatrixIterator end() const { return MatrixIterator(const_cast<Matrix*>(this), ROWS, size(), 0, _rows, 0, _cols); }
 
 #pragma endregion ITERATOR
 
