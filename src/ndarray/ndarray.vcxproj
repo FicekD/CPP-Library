@@ -128,10 +128,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="linalg.cpp" />
     <ClCompile Include="ndarray.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="array.hpp" />
+    <ClInclude Include="linalg.h" />
     <ClInclude Include="matrix.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

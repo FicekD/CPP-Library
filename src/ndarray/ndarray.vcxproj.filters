@@ -18,12 +18,18 @@
     <ClCompile Include="ndarray.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="linalg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="matrix.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="array.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="linalg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

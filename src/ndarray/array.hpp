@@ -50,6 +50,10 @@ namespace ndarray {
 				this->at(i) = scalar;
 		}
 
+        bool empty() const {
+            return _data == nullptr || _size == 0;
+        }
+
 		T get(std::size_t x) const {
 			if (x >= _size)
 				throw std::invalid_argument("Index out of bounds");

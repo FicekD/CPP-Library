@@ -117,6 +117,7 @@ namespace ndarray {
         using BaseArray<T>::at;
         using BaseArray<T>::get;
         using BaseArray<T>::fill;
+        using BaseArray<T>::empty;
 
         std::size_t rows() const { return _rows; }
         std::size_t cols() const { return _cols; }
@@ -451,25 +452,16 @@ namespace ndarray {
             return reduce<T>([](const T& x0, const T& x1) -> T { return x0 < x1 ? x0 : x1; }, dim, T(INFINITY));
         }
         Matrix<bool> reduce_any(Dim dim) const {
-            return reduce<bool>([](const T& x0, const T& x1) -> T { return x0 || x1 != 0; }, dim, false);
+            return reduce<bool>([](const T& x0, const T& x1) -> T { return x0 || x1; }, dim, false);
         }
         Matrix<bool> reduce_all(Dim dim) const {
-            return reduce<bool>([](const T& x0, const T& x1) -> T { return x0 && x1 != 0; }, dim, true);
+            return reduce<bool>([](const T& x0, const T& x1) -> T { return x0 && x1; }, dim, true);
         }
 
 #pragma endregion REDUCE
 
 #pragma region LINALG
-        Matrix<T> transpose() const {
-            Matrix<T> mat(_cols, _rows);
-            for (std::size_t row = 0; row < _rows; row++) {
-                for (std::size_t col = 0; col < _cols; col++) {
-                    mat.at(col, row) = this->at(row, col);
-                }
-            }
-            return mat;
-        }
-        void transpose_inplace() {
+        void transpose() {
             for (std::size_t row = 0; row < _rows; row++) {
                 for (std::size_t col = 0; col < _cols; col++) {
                     if (col >= row)
@@ -479,39 +471,6 @@ namespace ndarray {
             }
             this->reshape(_cols, _rows);
         }
-
-        Matrix<T> dot(const Matrix<T>& matrix) const {
-            if (this->_cols != matrix.rows())
-                throw std::invalid_argument("Matricies shape missmatch");
-            
-            Matrix<T> result(_rows, matrix.cols());
-            for (std::size_t row = 0; row < _rows; row++) {
-                for (std::size_t col = 0; col < matrix.cols(); col++) {
-                    T sum = T(0);
-                    for (std::size_t i = 0; i < _cols; i++) {
-                        sum += this->at(row, i) * matrix.at(i, col);
-                    }
-                    result.at(row, col) = sum;
-                }
-            }
-            return result;
-        }
-        Matrix<T> inverse() const {
-            if (_rows != _cols)
-                throw std::invalid_argument("Matrix has to be square");
-            
-            Matrix<T> expanded(std::vector<Matrix<T>> { *this, Matrix<T>::eye(_rows) }, COLS);
-        }
-        Matrix<T> pseudo_inverse() const;
-
-        std::tuple<Matrix<T>, Matrix<T>> eig() const;
-
-        Matrix<T> cholesky() const;
-        std::tuple<Matrix<T>, Matrix<T>, Matrix<T>> svd() const;
-
-        std::size_t rank() const;
-        T det() const;
-        T trace(int k = 0) const;
 
 #pragma endregion LINALG
 
