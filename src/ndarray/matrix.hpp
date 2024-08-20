@@ -19,38 +19,38 @@ namespace ndarray {
     };
 
     template <typename T>
-    class Matrix : public Array<T> {
+    class Matrix : public BaseArray<T> {
     private:
         std::size_t _rows = 0, _cols = 0;
     public:
 
 #pragma region CONSTRUCTORS
         Matrix() {}
-        Matrix(const Matrix<T>& matrix) : _rows(matrix._rows), _cols(matrix._cols), Array<T>(matrix.size()) {
+        Matrix(const Matrix<T>& matrix) : _rows(matrix._rows), _cols(matrix._cols), BaseArray<T>(matrix.size()) {
             if (size() > 0) {
-                Array<T>::_data = std::unique_ptr<T>(new T[matrix.size()]);
-                std::memcpy(Array<T>::_data.get(), matrix.Array<T>::_data.get(), matrix.size() * sizeof(T));
+                BaseArray<T>::_data = std::unique_ptr<T>(new T[matrix.size()]);
+                std::memcpy(BaseArray<T>::_data.get(), matrix.BaseArray<T>::_data.get(), matrix.size() * sizeof(T));
             }
         }
-        Matrix(Matrix<T>&& matrix) noexcept : _rows(matrix._rows), _cols(matrix._cols), Array<T>() {
-            Array<T>::_size = matrix.size();
-            Array<T>::_data = std::move(matrix.Array<T>::_data);
+        Matrix(Matrix<T>&& matrix) noexcept : _rows(matrix._rows), _cols(matrix._cols), BaseArray<T>() {
+            BaseArray<T>::_size = matrix.size();
+            BaseArray<T>::_data = std::move(matrix.BaseArray<T>::_data);
             matrix.clear();
         }
-        Matrix(std::size_t rows, std::size_t cols) : _rows(rows), _cols(cols), Array<T>(cols * rows) {
+        Matrix(std::size_t rows, std::size_t cols) : _rows(rows), _cols(cols), BaseArray<T>(cols * rows) {
             if (size() > 0)
-                Array<T>::_data = std::unique_ptr<T>(new T[size()] { T() });
+                BaseArray<T>::_data = std::unique_ptr<T>(new T[size()] { T() });
         }
-        Matrix(std::size_t rows, std::size_t cols, T* data) : _rows(rows), _cols(cols), Array<T>(cols * rows) {
+        Matrix(std::size_t rows, std::size_t cols, T* data) : _rows(rows), _cols(cols), BaseArray<T>(cols * rows) {
             if (size() > 0) {
-                Array<T>::_data = std::unique_ptr<T>(new T[size()]);
-                std::memcpy(Array<T>::_data.get(), data, size() * sizeof(T));
+                BaseArray<T>::_data = std::unique_ptr<T>(new T[size()]);
+                std::memcpy(BaseArray<T>::_data.get(), data, size() * sizeof(T));
             }
         }
-        Matrix(std::size_t rows, std::size_t cols, const std::vector<T>& data) : _rows(rows), _cols(cols), Array<T>(cols * rows) {
+        Matrix(std::size_t rows, std::size_t cols, const std::vector<T>& data) : _rows(rows), _cols(cols), BaseArray<T>(cols * rows) {
             if (size() > 0) {
-                Array<T>::_data = std::unique_ptr<T>(new T[size()]);
-                std::memcpy(Array<T>::_data.get(), data.data(), size() * sizeof(T));
+                BaseArray<T>::_data = std::unique_ptr<T>(new T[size()]);
+                std::memcpy(BaseArray<T>::_data.get(), data.data(), size() * sizeof(T));
             }
         }
         Matrix(std::vector<Matrix<T>> matrices, Dim concat_dim) {
@@ -65,11 +65,11 @@ namespace ndarray {
                         throw std::invalid_argument("Matrix column missmatch");
                     _rows += mat.rows();
                 }
-                Array<T>::_size = _rows * _cols;
-                Array<T>::_data = std::unique_ptr<T>(new T[size()]);
+                BaseArray<T>::_size = _rows * _cols;
+                BaseArray<T>::_data = std::unique_ptr<T>(new T[size()]);
                 std::size_t ptr = 0;
                 for (const Matrix<T>& mat : matrices) {
-                    std::memcpy(Array<T>::_data.get() + ptr, mat.Array<T>::_data.get(), mat.size() * sizeof(T));
+                    std::memcpy(BaseArray<T>::_data.get() + ptr, mat.BaseArray<T>::_data.get(), mat.size() * sizeof(T));
                     ptr += mat.size();
                 }
             }
@@ -81,12 +81,12 @@ namespace ndarray {
                         throw std::invalid_argument("Matrix row missmatch");
                     _cols += mat.cols();
                 }
-                Array<T>::_size = _rows * _cols;
-                Array<T>::_data = std::unique_ptr<T>(new T[size()]);
+                BaseArray<T>::_size = _rows * _cols;
+                BaseArray<T>::_data = std::unique_ptr<T>(new T[size()]);
                 std::size_t ptr = 0;
                 for (std::size_t row = 0; row < _rows; row++) {
                     for (const Matrix<T>& mat : matrices) {
-                        std::memcpy(Array<T>::_data.get() + ptr, mat.Array<T>::_data.get() + row * mat._cols, mat._cols * sizeof(T));
+                        std::memcpy(BaseArray<T>::_data.get() + ptr, mat.BaseArray<T>::_data.get() + row * mat._cols, mat._cols * sizeof(T));
                         ptr += mat._cols;
                     }
                 }
@@ -113,10 +113,10 @@ namespace ndarray {
 #pragma endregion CONSTRUCTORS
 
 #pragma region CORE
-        using Array<T>::size;
-        using Array<T>::at;
-        using Array<T>::get;
-        using Array<T>::fill;
+        using BaseArray<T>::size;
+        using BaseArray<T>::at;
+        using BaseArray<T>::get;
+        using BaseArray<T>::fill;
 
         std::size_t rows() const { return _rows; }
         std::size_t cols() const { return _cols; }
@@ -124,7 +124,7 @@ namespace ndarray {
         void clear() {
             _rows = 0;
             _cols = 0;
-            Array<T>::clear();
+            BaseArray<T>::clear();
         }
 
         template <typename T1, typename T2>
@@ -178,56 +178,57 @@ namespace ndarray {
 
 #pragma region MATH_OPS
 
-        using Array<T>::add_inplace;
-        using Array<T>::subtract_inplace;
-        using Array<T>::multiply_inplace;
-        using Array<T>::divide_inplace;
-        using Array<T>::square_inplace;
-        using Array<T>::sqrt_inplace;
-        using Array<T>::pow_inplace;
-        using Array<T>::exp_inplace;
-        using Array<T>::exp2_inplace;
-        using Array<T>::exp10_inplace;
-        using Array<T>::log_inplace;
-        using Array<T>::log2_inplace;
-        using Array<T>::log10_inplace;
+        using BaseArray<T>::add_inplace;
+        using BaseArray<T>::subtract_inplace;
+        using BaseArray<T>::multiply_inplace;
+        using BaseArray<T>::divide_inplace;
+        using BaseArray<T>::square_inplace;
+        using BaseArray<T>::sqrt_inplace;
+        using BaseArray<T>::pow_inplace;
+        using BaseArray<T>::exp_inplace;
+        using BaseArray<T>::exp2_inplace;
+        using BaseArray<T>::exp10_inplace;
+        using BaseArray<T>::log_inplace;
+        using BaseArray<T>::log2_inplace;
+        using BaseArray<T>::log10_inplace;
 
-        using Array<T>::sin_inplace;
-        using Array<T>::cos_inplace;
-        using Array<T>::tan_inplace;
-        using Array<T>::arcsin_inplace;
-        using Array<T>::arccos_inplace;
-        using Array<T>::arctan_inplace;
-        using Array<T>::deg2rad_inplace;
-        using Array<T>::rad2deg_inplace;
+        using BaseArray<T>::sin_inplace;
+        using BaseArray<T>::cos_inplace;
+        using BaseArray<T>::tan_inplace;
+        using BaseArray<T>::arcsin_inplace;
+        using BaseArray<T>::arccos_inplace;
+        using BaseArray<T>::arctan_inplace;
+        using BaseArray<T>::deg2rad_inplace;
+        using BaseArray<T>::rad2deg_inplace;
         
-        using Array<T>::abs_inplace;
-        using Array<T>::clamp_inplace;
-        using Array<T>::round_inplace;
-        using Array<T>::floor_inplace;
-        using Array<T>::ceil_inplace;
-        using Array<T>::trunc_inplace;
+        using BaseArray<T>::abs_inplace;
+        using BaseArray<T>::clamp_inplace;
+        using BaseArray<T>::round_inplace;
+        using BaseArray<T>::floor_inplace;
+        using BaseArray<T>::ceil_inplace;
+        using BaseArray<T>::trunc_inplace;
 
         template <typename R = T>
         Matrix<R> map_to_new(const std::function<R(const T&, const T&)>& lambda, const Matrix<T>& matrix) const {
             Matrix::_except_on_2d_mismatch<T, T>(*this, matrix);
             Matrix<R> result(_rows, _cols);
-            Array<T>::template map_to<R>(lambda, dynamic_cast<const Array<T>&>(matrix), dynamic_cast<Array<T>&>(result));
+            BaseArray<T>::template map_to<R>(lambda, dynamic_cast<const BaseArray<T>&>(matrix), dynamic_cast<BaseArray<R>&>(result));
             return result;
         }
         template <typename R = T>
         Matrix<R> map_to_new(const std::function<R(const T&)>& lambda) const {
             Matrix<R> result(_rows, _cols);
-            Array<T>::template map_to<R>(lambda, dynamic_cast<Array<T>&>(result));
+            BaseArray<T>* base_pointer = dynamic_cast<BaseArray<T>*>(&result);
+            BaseArray<T>::template map_to<R>(lambda, result);
             return result;
         }
         void operator=(const Matrix<T>& matrix) {
             if (matrix.size() != size()) {
-                Array<T>::_data.release();
-                Array<T>::_data = std::unique_ptr<T>(new T[matrix.size()]);
+                BaseArray<T>::_data.release();
+                BaseArray<T>::_data = std::unique_ptr<T>(new T[matrix.size()]);
             }
-            std::memcpy(Array<T>::_data.get(), matrix.Array<T>::_data.get(), matrix.size() * sizeof(T));
-            Array<T>::_size = matrix.size();
+            std::memcpy(BaseArray<T>::_data.get(), matrix.BaseArray<T>::_data.get(), matrix.size() * sizeof(T));
+            BaseArray<T>::_size = matrix.size();
             _rows = matrix._rows;
             _cols = matrix._cols;
         }
@@ -235,104 +236,104 @@ namespace ndarray {
             return map_to_new<T>([](const T& x1, const T& x2) -> T { return x1 + x2; }, matrix);
         }
         Matrix<T> operator+(const T& scalar) const {
-            return map_to_new([scalar](const T& x1) -> T { return x1 + scalar; });
+            return map_to_new<T>([scalar](const T& x1) -> T { return x1 + scalar; });
         }
         Matrix<T> operator+() const {
             Matrix<T> result(*this);
             return result;
         }
         Matrix<T> operator-(const Matrix<T>& matrix) const {
-            return map_to_new([](const T& x1, const T& x2) -> T { return x1 - x2; }, matrix);
+            return map_to_new<T>([](const T& x1, const T& x2) -> T { return x1 - x2; }, matrix);
         }
         Matrix<T> operator-(const T& scalar) const {
-            return map_to_new([scalar](const T& x1) -> T { return x1 - scalar; });
+            return map_to_new<T>([scalar](const T& x1) -> T { return x1 - scalar; });
         }
         Matrix<T> operator-() const {
-            return map_to_new([](const T& x1) -> T { return -x1; });
+            return map_to_new<T>([](const T& x1) -> T { return -x1; });
         }
         Matrix<T> operator*(const Matrix<T>& matrix) const {
-            return map_to_new([](const T& x1, const T& x2) -> T { return x1 * x2; }, matrix);
+            return map_to_new<T>([](const T& x1, const T& x2) -> T { return x1 * x2; }, matrix);
         }
         Matrix<T> operator*(const T& scalar) const {
-            return map_to_new([scalar](const T& x1) -> T { return x1 * scalar; });
+            return map_to_new<T>([scalar](const T& x1) -> T { return x1 * scalar; });
         }
         Matrix<T> operator/(const Matrix<T>& matrix) const {
-            return map_to_new([](const T& x1, const T& x2) -> T { return x1 / x2; }, matrix);
+            return map_to_new<T>([](const T& x1, const T& x2) -> T { return x1 / x2; }, matrix);
         }
         Matrix<T> operator/(const T& scalar) const {
-            return map_to_new([scalar](const T& x1) -> T { return x1 / scalar; });
+            return map_to_new<T>([scalar](const T& x1) -> T { return x1 / scalar; });
         }
         Matrix<T> square() const {
-            return map_to_new([](const T& x1) -> T { return x1 * x1; });
+            return map_to_new<T>([](const T& x1) -> T { return x1 * x1; });
         }
         Matrix<T> sqrt() const {
-            return map_to_new([](const T& x1) -> T { return std::sqrt(x1); });
+            return map_to_new<T>([](const T& x1) -> T { return (T)std::sqrt(x1); });
         }
         Matrix<T> pow(double power) const {
-            return map_to_new([power](const T& x1) -> T { return std::pow(x1, power); });
+            return map_to_new<T>([power](const T& x1) -> T { return (T)std::pow(x1, power); });
         }
         Matrix<T> exp() const {
-            return map_to_new([](const T& x1) -> T { return std::exp(x1); });
+            return map_to_new<T>([](const T& x1) -> T { return std::exp(x1); });
         }
         Matrix<T> exp2() const {
-            return map_to_new([](const T& x1) -> T { return std::exp2(x1); });
+            return map_to_new<T>([](const T& x1) -> T { return std::exp2(x1); });
         }
         Matrix<T> exp10() const {
-            return map_to_new([](const T& x1) -> T { return pow(T(10), x1); });
+            return map_to_new<T>([](const T& x1) -> T { return pow(T(10), x1); });
         }
         Matrix<T> log() const {
-            return map_to_new([](const T& x1) -> T { return std::log(x1); });
+            return map_to_new<T>([](const T& x1) -> T { return std::log(x1); });
         }
         Matrix<T> log2() const {
-            return map_to_new([](const T& x1) -> T { return std::sqrt(x1); });
+            return map_to_new<T>([](const T& x1) -> T { return std::sqrt(x1); });
         }
         Matrix<T> log10() const {
-            return map_to_new([](const T& x1) -> T { return std::log10(x1); });
+            return map_to_new<T>([](const T& x1) -> T { return std::log10(x1); });
         }
         Matrix<T> sin() const {
-            return map_to_new([](const T& x1) -> T { return std::sin(x1); });
+            return map_to_new<T>([](const T& x1) -> T { return std::sin(x1); });
         }
         Matrix<T> cos() const {
-            return map_to_new([](const T& x1) -> T { return std::cos(x1); });
+            return map_to_new<T>([](const T& x1) -> T { return std::cos(x1); });
         }
         Matrix<T> tan() const {
-            return map_to_new([](const T& x1) -> T { return std::tan(x1); });
+            return map_to_new<T>([](const T& x1) -> T { return std::tan(x1); });
         }
         Matrix<T> arcsin() const {
-            return map_to_new([](const T& x1) -> T { return std::asin(x1); });
+            return map_to_new<T>([](const T& x1) -> T { return std::asin(x1); });
         }
         Matrix<T> arccos() const {
-            return map_to_new([](const T& x1) -> T { return std::acos(x1); });
+            return map_to_new<T>([](const T& x1) -> T { return std::acos(x1); });
         }
         Matrix<T> arctan() const {
-            return map_to_new([](const T& x1) -> T { return std::atan(x1); });
+            return map_to_new<T>([](const T& x1) -> T { return std::atan(x1); });
         }
         Matrix<T> deg2rad() const {
-            return map_to_new([](const T& x1) -> T { x1 * T(PI / 180.0); });
+            return map_to_new<T>([](const T& x1) -> T { x1 * T(PI / 180.0); });
         }
         Matrix<T> rad2deg() const {
-            return map_to_new([](const T& x1) -> T { x1 * T(180.0 / PI); });
+            return map_to_new<T>([](const T& x1) -> T { x1 * T(180.0 / PI); });
         }
         Matrix<T> abs() const {
-            return map_to_new([](const T& x1) -> T { return std::abs(x1); });
+            return map_to_new<T>([](const T& x1) -> T { return std::abs(x1); });
         }
         Matrix<int> sign() const {
-            return map_to_new([](const T& x1) -> T { (x1 > T(0)) - (x1 < T(0)); });
+            return map_to_new<T>([](const T& x1) -> T { (x1 > T(0)) - (x1 < T(0)); });
         }
         Matrix<T> clamp(const T& min, const T& max) const {
-            return map_to_new([min, max](const T& x1) -> T { return std::clamp(x1, min, max); });
+            return map_to_new<T>([min, max](const T& x1) -> T { return std::clamp(x1, min, max); });
         }
         Matrix<T> round() const {
-            return map_to_new([](const T& x1) -> T { return std::round(x1); });
+            return map_to_new<T>([](const T& x1) -> T { return std::round(x1); });
         }
         Matrix<T> floor() const {
-            return map_to_new([](const T& x1) -> T { return std::floor(x1); });
+            return map_to_new<T>([](const T& x1) -> T { return std::floor(x1); });
         }
         Matrix<T> ceil() const {
-            return map_to_new([](const T& x1) -> T { return std::ceil(x1); });
+            return map_to_new<T>([](const T& x1) -> T { return std::ceil(x1); });
         }
         Matrix<T> trunc() const {
-            return map_to_new([](const T& x1) -> T { return std::trunc(x1); });
+            return map_to_new<T>([](const T& x1) -> T { return std::trunc(x1); });
         }
 
 #pragma endregion MATH_OPS
@@ -398,12 +399,12 @@ namespace ndarray {
 #pragma endregion LOGICAL_OPS
         
 #pragma region REDUCE
-        using Array<T>::reduce_sum;
-        using Array<T>::reduce_prod;
-        using Array<T>::reduce_max;
-        using Array<T>::reduce_min;
-        using Array<T>::reduce_any;
-        using Array<T>::reduce_all;
+        using BaseArray<T>::reduce_sum;
+        using BaseArray<T>::reduce_prod;
+        using BaseArray<T>::reduce_max;
+        using BaseArray<T>::reduce_min;
+        using BaseArray<T>::reduce_any;
+        using BaseArray<T>::reduce_all;
         
         template<typename R>
         Matrix<R> reduce_rows(const std::function<R(const R&, const T&)>& lambda, const R& initializer) const {
@@ -411,7 +412,7 @@ namespace ndarray {
             result.fill(initializer);
             for (std::size_t row = 0; row < _rows; row++) {
                 for (std::size_t col = 0; col < _cols; col++) {
-                    R& at_col = result.Array<R>::at(col);
+                    R& at_col = result.BaseArray<R>::at(col);
                     at_col = lambda(at_col, this->get(row, col));
                 }
             }
@@ -423,7 +424,7 @@ namespace ndarray {
             result.fill(initializer);
             for (std::size_t row = 0; row < _rows; row++) {
                 for (std::size_t col = 0; col < _cols; col++) {
-                    R& at_row = result.Array<R>::at(row);
+                    R& at_row = result.BaseArray<R>::at(row);
                     at_row = lambda(at_row, this->get(row, col));
                 }
             }

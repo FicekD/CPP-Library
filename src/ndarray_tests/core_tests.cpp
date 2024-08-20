@@ -87,11 +87,10 @@ namespace core_tests
 				matrix_origin.at(i) = i;
 			
 			ndarray::Matrix<int> matrix_move = std::move(matrix_origin);
-#pragma warning(disable: 26800)
+
 			Assert::AreEqual(std::size_t(0), matrix_origin.rows());
 			Assert::AreEqual(std::size_t(0), matrix_origin.cols());
 			Assert::AreEqual(std::size_t(0), matrix_origin.size());
-#pragma warning(restore: 26800)
 			Assert::AreEqual(rows, matrix_move.rows());
 			Assert::AreEqual(cols, matrix_move.cols());
 			Assert::AreEqual(rows * cols, matrix_move.size());

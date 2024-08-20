@@ -16,26 +16,28 @@ constexpr double PI = 3.141592653589793238463;
 namespace ndarray {
 	
 	template <typename T>
-	class Array {
+	class BaseArray {
 	protected:
 		std::unique_ptr<T> _data = nullptr;
 		std::size_t _size = 0;
 	public:
-        Array() {}
-		Array(const Array<T>& arr) : _size(arr._size) {
+        BaseArray() {}
+		BaseArray(const BaseArray<T>& arr) : _size(arr._size) {
 			if (_size > 0) {
 				_data = std::unique_ptr<T>(new T[arr._size]);
 				std::memcpy(_data.get(), arr._data.get(), arr._size * sizeof(T));
 			}
 		}
-		Array(Array<T>&& arr) noexcept : _size(arr._size) {
+		BaseArray(BaseArray<T>&& arr) noexcept : _size(arr._size) {
 			_data = std::move(arr._data);
 			arr.clear();
 		}
-		Array(std::size_t size) : _size(size) {
+		BaseArray(std::size_t size) : _size(size) {
 			if (_size > 0)
 				_data = std::unique_ptr<T>(new T[_size]{ T() });
 		}
+
+        virtual ~BaseArray() = default;
 
 		std::size_t size() const { return _size; }
 
@@ -60,8 +62,8 @@ namespace ndarray {
 		}
 
         template <typename T1, typename T2>
-        static void _except_on_size_mismatch(const Array<T1>& arr1, const Array<T2>& arr2) {
-            if (arr1._size != arr2._size)
+        static void _except_on_size_mismatch(const BaseArray<T1>& arr1, const BaseArray<T2>& arr2) {
+            if (arr1.size() != arr2.size())
                 throw std::invalid_argument("Size mismatch");
         }
         void map_inplace(const std::function<T(const T&)>& lambda) {
@@ -70,7 +72,7 @@ namespace ndarray {
                 ref = lambda(ref);
             }
         }
-        void map_inplace(const std::function<T(const T&, const T&)>& lambda, const Array<T>& arr) {
+        void map_inplace(const std::function<T(const T&, const T&)>& lambda, const BaseArray<T>& arr) {
             _except_on_size_mismatch<T, T>(*this, arr);
             for (int i = 0; i < _size; i++) {
                 T& ref = this->at(i);
@@ -78,14 +80,14 @@ namespace ndarray {
             }
         }
         template <typename R = T>
-        void map_to(const std::function<R(const T&)>& lambda, Array<R>& target) const {
+        void map_to(const std::function<R(const T&)>& lambda, BaseArray<R>& target) const {
             _except_on_size_mismatch<T, R>(*this, target);
             for (int i = 0; i < _size; i++) {
-                target.at(i) = lambda(this->at(i));
+                target.at(i) = lambda(this->get(i));
             }
         }
         template <typename R = T>
-        void map_to(const std::function<R(const T&, const T&)>& lambda, const Array<T>& arr, Array<R>& target) const {
+        void map_to(const std::function<R(const T&, const T&)>& lambda, const BaseArray<T>& arr, BaseArray<R>& target) const {
             _except_on_size_mismatch<T, T>(*this, arr);
             _except_on_size_mismatch<T, R>(*this, target);
             for (int i = 0; i < _size; i++) {
@@ -96,25 +98,25 @@ namespace ndarray {
         void add_inplace(const T& scalar) {
             map_inplace([scalar](const T& x) -> T { return x + scalar; });
         }
-        void add_inplace(const Array<T>& arr) {
+        void add_inplace(const BaseArray<T>& arr) {
             map_inplace([](const T& x1, const T& x2) -> T { return x1 + x2; }, arr);
         }
         void subtract_inplace(const T& scalar) {
             map_inplace([scalar](const T& x) -> T { return x - scalar; });
         }
-        void subtract_inplace(const Array<T>& arr) {
+        void subtract_inplace(const BaseArray<T>& arr) {
             map_inplace([](const T& x1, const T& x2) -> T { return x1 - x2; }, arr);
         }
         void multiply_inplace(const T& scalar) {
             map_inplace([scalar](const T& x) -> T { return x * scalar; });
         }
-        void multiply_inplace(const Array<T>& arr) {
+        void multiply_inplace(const BaseArray<T>& arr) {
             map_inplace([](const T& x1, const T& x2) -> T { return x1 * x2; }, arr);
         }
         void divide_inplace(const T& scalar) {
             map_inplace([scalar](const T& x) -> T { return x / scalar; });
         }
-        void divide_inplace(const Array<T>& arr) {
+        void divide_inplace(const BaseArray<T>& arr) {
             map_inplace([](const T& x1, const T& x2) -> T { return x1 / x2; }, arr);
         }
         void square_inplace() {
