@@ -218,8 +218,7 @@ namespace ndarray {
         template <typename R = T>
         Matrix<R> map_to_new(const std::function<R(const T&)>& lambda) const {
             Matrix<R> result(_rows, _cols);
-            BaseArray<T>* base_pointer = dynamic_cast<BaseArray<T>*>(&result);
-            BaseArray<T>::template map_to<R>(lambda, result);
+            BaseArray<T>::template map_to<R>(lambda, dynamic_cast<BaseArray<R>&>(result));
             return result;
         }
         void operator=(const Matrix<T>& matrix) {
