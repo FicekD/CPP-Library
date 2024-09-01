@@ -220,9 +220,10 @@ def main(target_directory: str, generation_definition_path: str, test_definition
     for test_module_name, test_definitions in test_definitions.items():
         test_module_dir = os.path.join(target_directory, test_module_name)
         os.makedirs(test_module_dir, exist_ok=True)
+        print(f'{test_module_name} Module:')
         for test_definition in test_definitions:
             output = get_outputs(inputs, test_definition)
-            print(test_definition.name, len([o for o in output if o.output is not None]))
+            print(f'\t{test_definition.name}: {len([o for o in output if o.output is not None])} cases')
 
             output_bytes = serialize_outputs(output)
             write_bytes(os.path.join(test_module_dir, f'{test_definition.name}.bin'), output_bytes)
