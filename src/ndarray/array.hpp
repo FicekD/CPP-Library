@@ -99,6 +99,12 @@ namespace ndarray {
             }
         }
 
+        void inplace_positive() {
+            map_inplace([](const T& x) -> T { return +x; });
+        }
+        void inplace_negative() {
+            map_inplace([](const T& x) -> T { return -x; });
+        }
         void add_inplace(const T& scalar) {
             map_inplace([scalar](const T& x) -> T { return x + scalar; });
         }
@@ -196,6 +202,9 @@ namespace ndarray {
         }
         void trunc_inplace() {
             map_inplace([](const T& x) -> T { return std::trunc(x); });
+        }
+        void sign_inplace() {
+            map_inplace([](const T& x) -> T { return (x > T(0)) - (x < T(0)); });
         }
 
         T reduce_sum() const {

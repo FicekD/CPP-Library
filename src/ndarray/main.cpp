@@ -32,8 +32,11 @@ int main() {
 
     ndarray::Matrix<double> x5(16, 1, { -0.0, -0.0, -596.59, -0.0, -0.0, -591.58, -780.01, -0.0, -248.83, -0.0, -0.0, -928.11, -68.80, -85.28, -426.91, -181.66 });
 
-    std::cout << x5 << std::endl;
-    std::cout << x5.exp10() << std::endl;
+    auto fn = [](ndarray::Matrix<double>& m1) { m1.square_inplace(); };
+    std::cout << x4 << std::endl;
+    std::cout << x4.square() << std::endl;
+    fn(x4);
+    std::cout << x4 << std::endl;
 
     return 0;
 }

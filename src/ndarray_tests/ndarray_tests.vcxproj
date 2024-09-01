@@ -159,7 +159,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="arithmetic_ops_tests.cpp" />
+    <ClCompile Include="arithmetic_tests.cpp" />
     <ClCompile Include="core_tests.cpp" />
     <ClCompile Include="generated_tests_io.hpp" />
     <ClCompile Include="logical_ops_tests.cpp" />

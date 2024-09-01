@@ -179,6 +179,9 @@ namespace ndarray {
 
 #pragma region MATH_OPS
 
+        using BaseArray<T>::inplace_positive;
+        using BaseArray<T>::inplace_negative;
+
         using BaseArray<T>::add_inplace;
         using BaseArray<T>::subtract_inplace;
         using BaseArray<T>::multiply_inplace;
@@ -208,6 +211,7 @@ namespace ndarray {
         using BaseArray<T>::floor_inplace;
         using BaseArray<T>::ceil_inplace;
         using BaseArray<T>::trunc_inplace;
+        using BaseArray<T>::sign_inplace;
 
         template <typename R = T>
         Matrix<R> map_to_new(const std::function<R(const T&, const T&)>& lambda, const Matrix<T>& matrix) const {
@@ -262,6 +266,18 @@ namespace ndarray {
         }
         Matrix<T> operator/(const T& scalar) const {
             return map_to_new<T>([scalar](const T& x1) -> T { return x1 / scalar; });
+        }
+        Matrix<T> add(const Matrix<T>& matrix) const {
+            return map_to_new<T>([](const T& x1, const T& x2) -> T { return x1 + x2; }, matrix);
+        }
+        Matrix<T> subtract(const Matrix<T>& matrix) const {
+            return map_to_new<T>([](const T& x1, const T& x2) -> T { return x1 - x2; }, matrix);
+        }
+        Matrix<T> multiply(const Matrix<T>& matrix) const {
+            return map_to_new<T>([](const T& x1, const T& x2) -> T { return x1 * x2; }, matrix);
+        }
+        Matrix<T> divide(const Matrix<T>& matrix) const {
+            return map_to_new<T>([](const T& x1, const T& x2) -> T { return x1 / x2; }, matrix);
         }
         Matrix<T> square() const {
             return map_to_new<T>([](const T& x1) -> T { return x1 * x1; });

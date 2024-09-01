@@ -59,7 +59,7 @@
         <Test>
             <Name>Exp10</Name>
             <Unary>True</Unary>
-            <PythonCall>lambda _x: np.pow(10.0, _x)</PythonCall>
+            <PythonCall>lambda _x: np.power(10.0, _x)</PythonCall>
         </Test>
         <Test>
             <Name>Log</Name>

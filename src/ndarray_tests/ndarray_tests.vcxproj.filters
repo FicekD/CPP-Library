@@ -18,7 +18,7 @@
     <ClCompile Include="core_tests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="arithmetic_ops_tests.cpp">
+    <ClCompile Include="arithmetic_tests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="logical_ops_tests.cpp">
