@@ -22,7 +22,7 @@ namespace ndarray {
 		std::size_t _size = 0;
 	public:
         BaseArray() {}
-		BaseArray(const BaseArray<T>& arr) : _size(arr._size) {
+		BaseArray(const BaseArray<T>& arr) noexcept : _size(arr._size) {
 			if (_size > 0) {
 				_data = std::unique_ptr<T>(new T[arr._size]);
 				std::memcpy(_data.get(), arr._data.get(), arr._size * sizeof(T));
@@ -32,7 +32,7 @@ namespace ndarray {
 			_data = std::move(arr._data);
 			arr.clear();
 		}
-		BaseArray(std::size_t size) : _size(size) {
+		BaseArray(std::size_t size) noexcept : _size(size) {
 			if (_size > 0)
 				_data = std::unique_ptr<T>(new T[_size]{ T() });
 		}
@@ -129,8 +129,11 @@ namespace ndarray {
         void sqrt_inplace() {
             map_inplace([](const T& x) -> T { return static_cast<T>(std::sqrt(x)); });
         }
-        void pow_inplace(double power) {
+        void pow_inplace(T power) {
             map_inplace([power](const T& x) -> T { return static_cast<T>(std::pow(x, power)); });
+        }
+        void pow_inplace(const BaseArray<T>& powers) {
+            map_inplace([](const T& x1, const T& x2) -> T { return static_cast<T>(std::pow(x1, x2)); }, powers);
         }
         void exp_inplace() {
             map_inplace([](const T& x) -> T { return std::exp(x); });

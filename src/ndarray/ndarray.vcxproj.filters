@@ -15,10 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ndarray.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="linalg.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -29,7 +26,7 @@
     <ClInclude Include="array.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="linalg.h">
+    <ClInclude Include="linalg.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

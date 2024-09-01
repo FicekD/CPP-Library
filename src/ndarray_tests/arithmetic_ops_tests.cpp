@@ -2,105 +2,166 @@
 
 #include "../ndarray/matrix.hpp"
 
+#include "generated_tests_io.hpp"
+#include "general_tests.hpp"
+
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
+
 namespace arithmetic_ops_tests {
+	std::vector<ndarray::Matrix<double>> inputs;
+
 	TEST_CLASS(arithmetic_ops_tests) {
 	public:
+		TEST_CLASS_INITIALIZE(ReadGeneratedTestDefinitions)
+		{
+			if (inputs.empty())
+				read_inputs(tests_path + "inputs.bin", inputs);
+		}
 		TEST_METHOD(UnaryPlus) {
-			ndarray::Matrix<int> original_matrix(10, 10);
-			original_matrix.fill(5);
-			ndarray::Matrix<int> target_matrix = (+original_matrix);
-			original_matrix.clear();
-			Assert::IsTrue((target_matrix == 5).reduce_all());
+			std::vector<TestOutput<double>> outputs;
+			read_outputs(tests_path + "Arithmetic/positive.bin", outputs);
+			run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double> m1) { return +m1; });
 		}
 		TEST_METHOD(UnaryMinus) {
-			ndarray::Matrix<int> original_matrix(10, 10);
-			original_matrix.fill(5);
-			ndarray::Matrix<int> target_matrix = (-original_matrix);
-			original_matrix.clear();
-			Assert::IsTrue((target_matrix == -5).reduce_all());
+			std::vector<TestOutput<double>> outputs;
+			read_outputs(tests_path + "Arithmetic/negative.bin", outputs);
+			run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double> m1) { return -m1; });
 		}
 		TEST_METHOD(Addition) {
-			ndarray::Matrix<int> original_matrix_1(10, 10);
-			original_matrix_1.fill(5);
-			ndarray::Matrix<int> original_matrix_2(10, 10);
-			original_matrix_2.fill(37);
-
-			ndarray::Matrix<int> scalar_addition = original_matrix_1 + 8;
-			ndarray::Matrix<int> elementwise_addition = original_matrix_1 + original_matrix_2;
-
-			original_matrix_1.clear();
-			original_matrix_2.clear();
-
-			Assert::IsTrue((scalar_addition == 13).reduce_all());
-			Assert::IsTrue((elementwise_addition == 42).reduce_all());
+			std::vector<TestOutput<double>> outputs;
+			read_outputs(tests_path + "Arithmetic/addition.bin", outputs);
+			run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double> m1, const ndarray::Matrix<double> m2) { return m1 + m2; });
 		}
 		TEST_METHOD(Subtraction) {
-			ndarray::Matrix<int> original_matrix_1(10, 10);
-			original_matrix_1.fill(5);
-			ndarray::Matrix<int> original_matrix_2(10, 10);
-			original_matrix_2.fill(37);
-
-			ndarray::Matrix<int> scalar_subtraction = original_matrix_1 - 8;
-			ndarray::Matrix<int> elementwise_subtraction = original_matrix_1 - original_matrix_2;
-
-			original_matrix_1.clear();
-			original_matrix_2.clear();
-
-			Assert::IsTrue((scalar_subtraction == -3).reduce_all());
-			Assert::IsTrue((elementwise_subtraction == -32).reduce_all());
+			std::vector<TestOutput<double>> outputs;
+			read_outputs(tests_path + "Arithmetic/subtraction.bin", outputs);
+			run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double> m1, const ndarray::Matrix<double> m2) { return m1 - m2; });
 		}
 		TEST_METHOD(Multiplication) {
-			ndarray::Matrix<int> original_matrix_1(10, 10);
-			original_matrix_1.fill(5);
-			ndarray::Matrix<int> original_matrix_2(10, 10);
-			original_matrix_2.fill(7);
-
-			ndarray::Matrix<int> scalar_multiplication = original_matrix_1 * 8;
-			ndarray::Matrix<int> elementwise_multiplication = original_matrix_1 * original_matrix_2;
-
-			original_matrix_1.clear();
-			original_matrix_2.clear();
-
-			Assert::IsTrue((scalar_multiplication == 40).reduce_all());
-			Assert::IsTrue((elementwise_multiplication == 35).reduce_all());
+			std::vector<TestOutput<double>> outputs;
+			read_outputs(tests_path + "Arithmetic/multiplication.bin", outputs);
+			run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double> m1, const ndarray::Matrix<double> m2) { return m1 * m2; });
 		}
 		TEST_METHOD(Division) {
-			ndarray::Matrix<int> original_matrix_1(10, 10);
-			original_matrix_1.fill(40);
-			ndarray::Matrix<int> original_matrix_2(10, 10);
-			original_matrix_2.fill(20);
-
-			ndarray::Matrix<int> scalar_division = original_matrix_1 / 8;
-			ndarray::Matrix<int> elementwise_division = original_matrix_1 / original_matrix_2;
-
-			original_matrix_1.clear();
-			original_matrix_2.clear();
-
-			Assert::IsTrue((scalar_division == 5).reduce_all());
-			Assert::IsTrue((elementwise_division == 2).reduce_all());
+			std::vector<TestOutput<double>> outputs;
+			read_outputs(tests_path + "Arithmetic/division.bin", outputs);
+			run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double> m1, const ndarray::Matrix<double> m2) { return m1 / m2; });
 		}
 		TEST_METHOD(Square) {
-			ndarray::Matrix<int> original_matrix(10, 10);
-			original_matrix.fill(5);
-			ndarray::Matrix<int> target_matrix = original_matrix.square();
-			original_matrix.clear();
-			Assert::IsTrue((target_matrix == 25).reduce_all());
+			std::vector<TestOutput<double>> outputs;
+			read_outputs(tests_path + "Arithmetic/square.bin", outputs);
+			run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double> m1) { return m1.square(); });
 		}
 		TEST_METHOD(SquareRoot) {
-			ndarray::Matrix<int> original_matrix(10, 10);
-			original_matrix.fill(49);
-			ndarray::Matrix<int> target_matrix = original_matrix.sqrt();
-			original_matrix.clear();
-			Assert::IsTrue((target_matrix == 7).reduce_all());
+			std::vector<TestOutput<double>> outputs;
+			read_outputs(tests_path + "Arithmetic/squareroot.bin", outputs);
+			run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double> m1) { return m1.sqrt(); });
 		}
 		TEST_METHOD(Power) {
-			ndarray::Matrix<int> original_matrix(10, 10);
-			original_matrix.fill(3);
-			ndarray::Matrix<int> target_matrix = original_matrix.pow(3);
-			original_matrix.clear();
-			Assert::IsTrue((target_matrix == 27).reduce_all());
+			std::vector<TestOutput<double>> outputs;
+			read_outputs(tests_path + "Arithmetic/power.bin", outputs);
+			run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double> m1, const ndarray::Matrix<double> m2) { return m1.pow(m2); });
+		}
+		TEST_METHOD(Exp) {
+			std::vector<TestOutput<double>> outputs;
+			read_outputs(tests_path + "Arithmetic/exp.bin", outputs);
+			run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double> m1) { return m1.exp(); });
+		}
+		TEST_METHOD(Exp2) {
+			std::vector<TestOutput<double>> outputs;
+			read_outputs(tests_path + "Arithmetic/exp2.bin", outputs);
+			run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double> m1) { return m1.exp2(); });
+		}
+		TEST_METHOD(Exp10) {
+			std::vector<TestOutput<double>> outputs;
+			read_outputs(tests_path + "Arithmetic/exp10.bin", outputs);
+			run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double> m1) { return m1.exp10(); });
+		}
+		TEST_METHOD(Log) {
+			std::vector<TestOutput<double>> outputs;
+			read_outputs(tests_path + "Arithmetic/log.bin", outputs);
+			run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double> m1) { return m1.log(); });
+		}
+		TEST_METHOD(Log2) {
+			std::vector<TestOutput<double>> outputs;
+			read_outputs(tests_path + "Arithmetic/log2.bin", outputs);
+			run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double> m1) { return m1.log2(); });
+		}
+		TEST_METHOD(Log10) {
+			std::vector<TestOutput<double>> outputs;
+			read_outputs(tests_path + "Arithmetic/log10.bin", outputs);
+			run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double> m1) { return m1.log10(); });
+		}
+		TEST_METHOD(Sin) {
+			std::vector<TestOutput<double>> outputs;
+			read_outputs(tests_path + "Arithmetic/sin.bin", outputs);
+			run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double> m1) { return m1.sin(); });
+		}
+		TEST_METHOD(Cos) {
+			std::vector<TestOutput<double>> outputs;
+			read_outputs(tests_path + "Arithmetic/cos.bin", outputs);
+			run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double> m1) { return m1.cos(); });
+		}
+		TEST_METHOD(Tan) {
+			std::vector<TestOutput<double>> outputs;
+			read_outputs(tests_path + "Arithmetic/tan.bin", outputs);
+			run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double> m1) { return m1.tan(); });
+		}
+		TEST_METHOD(ArcSin) {
+			std::vector<TestOutput<double>> outputs;
+			read_outputs(tests_path + "Arithmetic/arcsin.bin", outputs);
+			run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double> m1) { return m1.arcsin(); });
+		}
+		TEST_METHOD(ArcCos) {
+			std::vector<TestOutput<double>> outputs;
+			read_outputs(tests_path + "Arithmetic/arccos.bin", outputs);
+			run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double> m1) { return m1.arccos(); });
+		}
+		TEST_METHOD(ArcTan) {
+			std::vector<TestOutput<double>> outputs;
+			read_outputs(tests_path + "Arithmetic/arctan.bin", outputs);
+			run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double> m1) { return m1.arctan(); });
+		}
+		TEST_METHOD(Deg2Rad) {
+			std::vector<TestOutput<double>> outputs;
+			read_outputs(tests_path + "Arithmetic/deg2rad.bin", outputs);
+			run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double> m1) { return m1.deg2rad(); });
+		}
+		TEST_METHOD(Rad2Deg) {
+			std::vector<TestOutput<double>> outputs;
+			read_outputs(tests_path + "Arithmetic/rad2deg.bin", outputs);
+			run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double> m1) { return m1.rad2deg(); });
+		}
+		TEST_METHOD(Abs) {
+			std::vector<TestOutput<double>> outputs;
+			read_outputs(tests_path + "Arithmetic/abs.bin", outputs);
+			run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double> m1) { return m1.abs(); });
+		}
+		TEST_METHOD(Round) {
+			std::vector<TestOutput<double>> outputs;
+			read_outputs(tests_path + "Arithmetic/round.bin", outputs);
+			run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double> m1) { return m1.round(); });
+		}
+		TEST_METHOD(Floor) {
+			std::vector<TestOutput<double>> outputs;
+			read_outputs(tests_path + "Arithmetic/floor.bin", outputs);
+			run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double> m1) { return m1.floor(); });
+		}
+		TEST_METHOD(Ceil) {
+			std::vector<TestOutput<double>> outputs;
+			read_outputs(tests_path + "Arithmetic/ceil.bin", outputs);
+			run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double> m1) { return m1.ceil(); });
+		}
+		TEST_METHOD(Trunc) {
+			std::vector<TestOutput<double>> outputs;
+			read_outputs(tests_path + "Arithmetic/trunc.bin", outputs);
+			run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double> m1) { return m1.trunc(); });
+		}
+		TEST_METHOD(Sign) {
+			std::vector<TestOutput<double>> outputs;
+			read_outputs(tests_path + "Arithmetic/sign.bin", outputs);
+			run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double> m1) { return m1.sign(); });
 		}
 	};
 	TEST_CLASS(arithmetic_inplace_ops_tests) {

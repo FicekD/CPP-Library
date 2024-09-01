@@ -26,7 +26,7 @@ namespace ndarray {
 
 #pragma region CONSTRUCTORS
         Matrix() {}
-        Matrix(const Matrix<T>& matrix) : _rows(matrix._rows), _cols(matrix._cols), BaseArray<T>(matrix.size()) {
+        Matrix(const Matrix<T>& matrix) noexcept : _rows(matrix._rows), _cols(matrix._cols), BaseArray<T>(matrix.size()) {
             if (size() > 0) {
                 BaseArray<T>::_data = std::unique_ptr<T>(new T[matrix.size()]);
                 std::memcpy(BaseArray<T>::_data.get(), matrix.BaseArray<T>::_data.get(), matrix.size() * sizeof(T));
@@ -37,23 +37,23 @@ namespace ndarray {
             BaseArray<T>::_data = std::move(matrix.BaseArray<T>::_data);
             matrix.clear();
         }
-        Matrix(std::size_t rows, std::size_t cols) : _rows(rows), _cols(cols), BaseArray<T>(cols * rows) {
+        Matrix(std::size_t rows, std::size_t cols) noexcept : _rows(rows), _cols(cols), BaseArray<T>(cols * rows) {
             if (size() > 0)
                 BaseArray<T>::_data = std::unique_ptr<T>(new T[size()] { T() });
         }
-        Matrix(std::size_t rows, std::size_t cols, T* data) : _rows(rows), _cols(cols), BaseArray<T>(cols * rows) {
+        Matrix(std::size_t rows, std::size_t cols, T* data) noexcept : _rows(rows), _cols(cols), BaseArray<T>(cols * rows) {
             if (size() > 0) {
                 BaseArray<T>::_data = std::unique_ptr<T>(new T[size()]);
                 std::memcpy(BaseArray<T>::_data.get(), data, size() * sizeof(T));
             }
         }
-        Matrix(std::size_t rows, std::size_t cols, const std::vector<T>& data) : _rows(rows), _cols(cols), BaseArray<T>(cols * rows) {
+        Matrix(std::size_t rows, std::size_t cols, const std::vector<T>& data) noexcept : _rows(rows), _cols(cols), BaseArray<T>(cols * rows) {
             if (size() > 0) {
                 BaseArray<T>::_data = std::unique_ptr<T>(new T[size()]);
                 std::memcpy(BaseArray<T>::_data.get(), data.data(), size() * sizeof(T));
             }
         }
-        Matrix(std::vector<Matrix<T>> matrices, Dim concat_dim) {
+        Matrix(const std::vector<Matrix<T>>& matrices, Dim concat_dim) {
             if (matrices.size() == 0)
                 throw std::invalid_argument("Empty matrix vector to concat");
             
@@ -222,7 +222,7 @@ namespace ndarray {
             BaseArray<T>::template map_to<R>(lambda, dynamic_cast<BaseArray<R>&>(result));
             return result;
         }
-        void operator=(const Matrix<T>& matrix) {
+        void operator=(const Matrix<T>& matrix) noexcept {
             if (matrix.size() != size()) {
                 BaseArray<T>::_data.release();
                 BaseArray<T>::_data = std::unique_ptr<T>(new T[matrix.size()]);
@@ -267,10 +267,13 @@ namespace ndarray {
             return map_to_new<T>([](const T& x1) -> T { return x1 * x1; });
         }
         Matrix<T> sqrt() const {
-            return map_to_new<T>([](const T& x1) -> T { return (T)std::sqrt(x1); });
+            return map_to_new<T>([](const T& x1) -> T { return T(std::sqrt(x1)); });
         }
-        Matrix<T> pow(double power) const {
-            return map_to_new<T>([power](const T& x1) -> T { return (T)std::pow(x1, power); });
+        Matrix<T> pow(T power) const {
+            return map_to_new<T>([power](const T& x1) -> T { return T(std::pow(x1, power)); });
+        }
+        Matrix<T> pow(const Matrix<T>& powers) const {
+            return map_to_new<T>([](const T& x1, const T& x2) -> T { return T(std::pow(x1, x2)); }, powers);
         }
         Matrix<T> exp() const {
             return map_to_new<T>([](const T& x1) -> T { return std::exp(x1); });
@@ -279,7 +282,7 @@ namespace ndarray {
             return map_to_new<T>([](const T& x1) -> T { return std::exp2(x1); });
         }
         Matrix<T> exp10() const {
-            return map_to_new<T>([](const T& x1) -> T { return pow(T(10), x1); });
+            return map_to_new<T>([](const T& x1) -> T { return std::pow(T(10), x1); });
         }
         Matrix<T> log() const {
             return map_to_new<T>([](const T& x1) -> T { return std::log(x1); });
@@ -309,16 +312,16 @@ namespace ndarray {
             return map_to_new<T>([](const T& x1) -> T { return std::atan(x1); });
         }
         Matrix<T> deg2rad() const {
-            return map_to_new<T>([](const T& x1) -> T { x1 * T(PI / 180.0); });
+            return map_to_new<T>([](const T& x1) -> T { return x1 * T(PI / 180.0); });
         }
         Matrix<T> rad2deg() const {
-            return map_to_new<T>([](const T& x1) -> T { x1 * T(180.0 / PI); });
+            return map_to_new<T>([](const T& x1) -> T { return x1 * T(180.0 / PI); });
         }
         Matrix<T> abs() const {
             return map_to_new<T>([](const T& x1) -> T { return std::abs(x1); });
         }
-        Matrix<int> sign() const {
-            return map_to_new<T>([](const T& x1) -> T { (x1 > T(0)) - (x1 < T(0)); });
+        Matrix<T> sign() const {
+            return map_to_new<T>([](const T& x1) -> T { return (x1 > T(0)) - (x1 < T(0)); });
         }
         Matrix<T> clamp(const T& min, const T& max) const {
             return map_to_new<T>([min, max](const T& x1) -> T { return std::clamp(x1, min, max); });
@@ -460,21 +463,17 @@ namespace ndarray {
 
 #pragma endregion REDUCE
 
-#pragma region LINALG
-        void transpose() {
-            for (std::size_t row = 0; row < _rows; row++) {
-                for (std::size_t col = 0; col < _cols; col++) {
-                    if (col >= row)
-                        break;
-                    std::swap(this->at(ravel_indices(row, col)), this->at(ravel_indices(col, row)));
-                }
-            }
-            this->reshape(_cols, _rows);
-        }
-
-#pragma endregion LINALG
-
 #pragma region OTHER
+        void swap_rows(size_t row1, size_t row2) {
+            for (size_t col = 0; col < _cols; col++) {
+                std::swap(this->at(row1, col), this->at(row2, col));
+            }
+        }
+        void swap_cols(size_t col1, size_t col2) {
+            for (size_t row = 0; row < _rows; row++) {
+                std::swap(this->at(row, col1), this->at(row, col2));
+            }
+        }
         Matrix<T> flip_ud() const {
             Matrix<T> result(_rows, _cols);
             for (std::size_t row = 0; row < std::size_t(std::ceil(float(_rows) / 2)); row++) {

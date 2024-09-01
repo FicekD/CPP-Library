@@ -1,0 +1,133 @@
+#ifndef _LINALG_H
+#define _LINALG_H
+
+#include "matrix.hpp"
+
+namespace ndarray {
+
+	template <typename T>
+	Matrix<T> dot(const Matrix<T>& matrix_1, const Matrix<T>& matrix_2) {
+		if (matrix_1.cols() != matrix_2.rows())
+			throw std::invalid_argument("Matricies shape missmatch");
+
+		Matrix<T> result(matrix_1.rows(), matrix_2.cols());
+		for (std::size_t row = 0; row < matrix_1.rows(); row++) {
+			for (std::size_t col = 0; col < matrix_2.cols(); col++) {
+				T sum = T(0);
+				for (std::size_t i = 0; i < matrix_1.cols(); i++) {
+					sum += matrix_1.get(row, i) * matrix_2.get(i, col);
+				}
+				result.at(row, col) = sum;
+			}
+		}
+		return result;
+	}
+
+	template <typename T>
+	Matrix<T> transpose(const Matrix<T>& matrix) {
+		Matrix<T> mat(matrix.cols(), matrix.rows());
+		for (std::size_t row = 0; row < matrix.rows(); row++) {
+			for (std::size_t col = 0; col < matrix.cols(); col++) {
+				mat.at(col, row) = matrix.get(row, col);
+			}
+		}
+		return mat;
+	}
+
+	namespace _inv {
+		template <typename T>
+		void multiply_row(Matrix<T>& matrix, size_t row, T multiplier) {
+			for (size_t col = 0; col < matrix.cols(); col++) {
+				T& ref = matrix.at(row, col);
+				ref = ref * multiplier;
+			}
+		}
+
+		template <typename T>
+		size_t find_largest_abs_row_at_col(const Matrix<T>& matrix, size_t col) {
+			std::pair<size_t, T> largest(col, T(0));
+			for (size_t row = 0; row < matrix.rows(); row++) {
+				T value = std::abs(matrix.get(row, col));
+				if (value > largest.second) {
+					largest.first = row;
+					largest.second = value;
+				}
+			}
+			return largest.first;
+		}
+
+		template <typename T>
+		void subtract_multiplied_row(Matrix<T>& matrix, size_t target_row, size_t source_row, T multiplier) {
+			for (size_t col = 0; col < matrix.cols(); col++) {
+				T& ref = matrix.at(target_row, col);
+				ref = ref - multiplier * matrix.at(source_row, col);
+			}
+		}
+	}
+
+	template <typename T>
+	Matrix<T> inverse(const Matrix<T>& matrix) {
+		if (matrix.cols() != matrix.rows())
+			throw std::invalid_argument("Matrix has to be square");
+
+		Matrix<T> m(std::vector<Matrix<T>> { matrix, Matrix<T>::eye(matrix.rows()) }, COLS);
+
+		for (size_t col = 0; col < matrix.cols(); col++) {
+			if (m.at(col, col) == 0) {
+				size_t largest_row_idx = _inv::find_largest_abs_row_at_col(m, col);
+				if (largest_row_idx == col) {
+					throw std::invalid_argument("Matrix is singular");
+				}
+				m.swap_rows(col, largest_row_idx);
+				// did I break previous pivot?
+			}
+		}
+
+		for (size_t col = 0; col < matrix.cols() - 1; col++) {
+			for (size_t row = col + 1; row < matrix.rows(); row++) {
+				T k = m.get(row, col) / matrix.get(col, col);
+				_inv::subtract_multiplied_row(m, row, col, k);
+				m.at(row, col) = T(0);
+			}
+		}
+
+		for (size_t row = 0; row < m.rows(); row++) {
+			T multiplier = 1.0 / m.get(row, row);
+			_inv::multiply_row(m, row, multiplier);
+			m.at(row, row) = T(0);
+		}
+
+		for (size_t row = 0; row < m.rows(); row++) {
+			for (size_t col = row + 1; col < matrix.cols(); col++) {
+				T multiplier = m.get(row, col);
+				_inv::subtract_multiplied_row(m, row, col, multiplier);
+				m.at(row, col) = T(0);
+			}
+		}
+		Matrix<T> inverse = m.sub_matrix(0, m.rows(), matrix.cols(), m.cols());
+		return inverse;
+	}
+
+	template <typename T>
+	Matrix<T> pseudo_inverse();
+
+	template <typename T>
+	std::tuple<Matrix<T>, Matrix<T>> eig();
+
+	template <typename T>
+	Matrix<T> cholesky(const Matrix<T>& matrix);
+
+	template <typename T>
+	std::tuple<Matrix<T>, Matrix<T>, Matrix<T>> svd(const Matrix<T>& matrix);
+
+	template <typename T>
+	std::size_t rank(const Matrix<T>& matrix);
+
+	template <typename T>
+	T det(const Matrix<T>& matrix);
+
+	template <typename T>
+	T trace(const Matrix<T>& matrix, int k = 0);
+}
+
+#endif
