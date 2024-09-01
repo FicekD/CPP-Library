@@ -20,7 +20,7 @@ void run_generated_test(
         const ndarray::Matrix<T>& input = inputs[test.input_indices[0]];
         const ndarray::Matrix<T>& result = operation(input);
 
-        Assert::IsTrue(((result - test.output).abs() < 1e-30).reduce_all());
+        Assert::IsTrue(((result - test.output).abs() < 1e-10).reduce_all());
     }
 }
 

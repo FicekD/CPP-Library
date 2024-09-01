@@ -288,7 +288,7 @@ namespace ndarray {
             return map_to_new<T>([](const T& x1) -> T { return std::log(x1); });
         }
         Matrix<T> log2() const {
-            return map_to_new<T>([](const T& x1) -> T { return std::sqrt(x1); });
+            return map_to_new<T>([](const T& x1) -> T { return std::log2(x1); });
         }
         Matrix<T> log10() const {
             return map_to_new<T>([](const T& x1) -> T { return std::log10(x1); });

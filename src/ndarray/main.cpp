@@ -3,6 +3,7 @@
 #include "matrix.hpp"
 #include "linalg.hpp"
 
+
 int main() {
     ndarray::Matrix<double> x0(0, 5);
     std::cout << x0.size() << std::endl;

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <MatrixGeneration>
-    <N>2</N>
+    <N>10000</N>
     <Data>
         <Type>float</Type>
         <Bits>64</Bits>
