@@ -28,7 +28,7 @@ namespace ndarray {
         Matrix() {}
         Matrix(const Matrix<T>& matrix) noexcept : _rows(matrix._rows), _cols(matrix._cols), BaseArray<T>(matrix.size()) {
             if (size() > 0) {
-                BaseArray<T>::_data = std::unique_ptr<T>(new T[matrix.size()]);
+                BaseArray<T>::_data = std::unique_ptr<T[]>(new T[matrix.size()]);
                 std::memcpy(BaseArray<T>::_data.get(), matrix.BaseArray<T>::_data.get(), matrix.size() * sizeof(T));
             }
         }
@@ -39,17 +39,17 @@ namespace ndarray {
         }
         Matrix(std::size_t rows, std::size_t cols) noexcept : _rows(rows), _cols(cols), BaseArray<T>(cols * rows) {
             if (size() > 0)
-                BaseArray<T>::_data = std::unique_ptr<T>(new T[size()] { T() });
+                BaseArray<T>::_data = std::unique_ptr<T[]>(new T[size()] { T() });
         }
         Matrix(std::size_t rows, std::size_t cols, T* data) noexcept : _rows(rows), _cols(cols), BaseArray<T>(cols * rows) {
             if (size() > 0) {
-                BaseArray<T>::_data = std::unique_ptr<T>(new T[size()]);
+                BaseArray<T>::_data = std::unique_ptr<T[]>(new T[size()]);
                 std::memcpy(BaseArray<T>::_data.get(), data, size() * sizeof(T));
             }
         }
         Matrix(std::size_t rows, std::size_t cols, const std::vector<T>& data) noexcept : _rows(rows), _cols(cols), BaseArray<T>(cols * rows) {
             if (size() > 0) {
-                BaseArray<T>::_data = std::unique_ptr<T>(new T[size()]);
+                BaseArray<T>::_data = std::unique_ptr<T[]>(new T[size()]);
                 std::memcpy(BaseArray<T>::_data.get(), data.data(), size() * sizeof(T));
             }
         }
@@ -66,7 +66,7 @@ namespace ndarray {
                     _rows += mat.rows();
                 }
                 BaseArray<T>::_size = _rows * _cols;
-                BaseArray<T>::_data = std::unique_ptr<T>(new T[size()]);
+                BaseArray<T>::_data = std::unique_ptr<T[]>(new T[size()]);
                 std::size_t ptr = 0;
                 for (const Matrix<T>& mat : matrices) {
                     std::memcpy(BaseArray<T>::_data.get() + ptr, mat.BaseArray<T>::_data.get(), mat.size() * sizeof(T));
@@ -82,7 +82,7 @@ namespace ndarray {
                     _cols += mat.cols();
                 }
                 BaseArray<T>::_size = _rows * _cols;
-                BaseArray<T>::_data = std::unique_ptr<T>(new T[size()]);
+                BaseArray<T>::_data = std::unique_ptr<T[]>(new T[size()]);
                 std::size_t ptr = 0;
                 for (std::size_t row = 0; row < _rows; row++) {
                     for (const Matrix<T>& mat : matrices) {

@@ -18,13 +18,13 @@ namespace ndarray {
 	template <typename T>
 	class BaseArray {
 	protected:
-		std::unique_ptr<T> _data = nullptr;
+		std::unique_ptr<T[]> _data = nullptr;
 		std::size_t _size = 0;
 	public:
         BaseArray() {}
 		BaseArray(const BaseArray<T>& arr) noexcept : _size(arr._size) {
 			if (_size > 0) {
-				_data = std::unique_ptr<T>(new T[arr._size]);
+				_data = std::unique_ptr<T[]>(new T[arr._size]);
 				std::memcpy(_data.get(), arr._data.get(), arr._size * sizeof(T));
 			}
 		}
@@ -34,7 +34,7 @@ namespace ndarray {
 		}
 		BaseArray(std::size_t size) noexcept : _size(size) {
 			if (_size > 0)
-				_data = std::unique_ptr<T>(new T[_size]{ T() });
+				_data = std::unique_ptr<T[]>(new T[_size]{ T() });
 		}
 
         virtual ~BaseArray() = default;
