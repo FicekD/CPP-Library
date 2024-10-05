@@ -13,7 +13,7 @@
 
 #include "array.hpp"
 
-namespace ndarray {
+namespace matrix {
     enum Dim {
         ROWS, COLS
     };

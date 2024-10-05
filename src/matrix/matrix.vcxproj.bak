@@ -22,8 +22,9 @@
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{8e1d2b04-bbc6-4aa9-a25a-62542c127ff4}</ProjectGuid>
-    <RootNamespace>ndarray</RootNamespace>
+    <RootNamespace>matrix</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>matrix</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -71,8 +72,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>D:\ALL-IN\Programming\C++\cpp-lib\src\ndarray;$(IncludePath)</IncludePath>
-    <SourcePath>D:\ALL-IN\Programming\C++\cpp-lib\src\ndarray;$(SourcePath)</SourcePath>
+    <IncludePath>D:\ALL-IN\Programming\C++\cpp-lib\src\matrix;$(IncludePath)</IncludePath>
+    <SourcePath>D:\ALL-IN\Programming\C++\cpp-lib\src\matrix;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -109,7 +110,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>D:\ALL-IN\Programming\C++\cpp-lib\src\ndarray;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\ALL-IN\Programming\C++\cpp-lib\src\matrix;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

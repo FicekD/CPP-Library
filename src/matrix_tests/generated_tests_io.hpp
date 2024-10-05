@@ -4,7 +4,7 @@
 #include <string>
 #include <fstream>
 
-#include "../ndarray/matrix.hpp"
+#include "../matrix/matrix.hpp"
 
 namespace generated_tests {
     const std::string tests_path("D:/ALL-IN/Programming/C++/cpp-lib/data/mat_unit_tests/");
@@ -12,7 +12,7 @@ namespace generated_tests {
     template <typename T>
     struct TestOutput {
         std::vector<size_t> input_indices;
-        ndarray::Matrix<T> output;
+        matrix::Matrix<T> output;
     };
 
     template <typename T>
@@ -24,7 +24,7 @@ namespace generated_tests {
     }
 
     template <typename T>
-    ndarray::Matrix<T> try_read_mat(std::ifstream& stream) {
+    matrix::Matrix<T> try_read_mat(std::ifstream& stream) {
         int width, height;
         char int_data[4];
 
@@ -41,19 +41,19 @@ namespace generated_tests {
         std::vector<char> bytes(width * height * sizeof(T));
         stream.read(bytes.data(), width * height * sizeof(T));
         double* const data = reinterpret_cast<T*>(bytes.data());
-        ndarray::Matrix<T> mat(height, width, data);
+        matrix::Matrix<T> mat(height, width, data);
 
         return mat;
     }
 
     template <typename T>
-    void read_inputs(const std::string& path, std::vector<ndarray::Matrix<T>>& inputs) {
+    void read_inputs(const std::string& path, std::vector<matrix::Matrix<T>>& inputs) {
         std::ifstream stream(path, std::ios::binary);
         int i = 0;
         while (true) {
             i++;
             try {
-                ndarray::Matrix<T> mat = try_read_mat<T>(stream);
+                matrix::Matrix<T> mat = try_read_mat<T>(stream);
                 inputs.push_back(mat);
             }
             catch (std::ifstream::failure) {
@@ -88,7 +88,7 @@ namespace generated_tests {
                 indices[i] = (size_t)index;
             }
 
-            ndarray::Matrix<T> mat = try_read_mat<T>(stream);
+            matrix::Matrix<T> mat = try_read_mat<T>(stream);
 
             TestOutput<T> test_output{ indices, mat };
 

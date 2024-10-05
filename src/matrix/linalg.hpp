@@ -3,7 +3,7 @@
 
 #include "matrix.hpp"
 
-namespace ndarray {
+namespace matrix {
 
 	template <typename T>
 	Matrix<T> dot(const Matrix<T>& matrix_1, const Matrix<T>& matrix_2) {
