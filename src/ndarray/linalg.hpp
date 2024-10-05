@@ -109,25 +109,39 @@ namespace ndarray {
 	}
 
 	template <typename T>
-	Matrix<T> pseudo_inverse();
+	Matrix<T> pseudo_inverse(const Matrix<T>& matrix) {
+		throw std::logic_error("Not implemented");
+	}
 
 	template <typename T>
-	std::tuple<Matrix<T>, Matrix<T>> eig();
+	std::tuple<Matrix<T>, Matrix<T>> eig(const Matrix<T>& matrix) {
+		throw std::logic_error("Not implemented");
+	}
 
 	template <typename T>
-	Matrix<T> cholesky(const Matrix<T>& matrix);
+	Matrix<T> cholesky(const Matrix<T>& matrix) {
+		throw std::logic_error("Not implemented");
+	}
 
 	template <typename T>
-	std::tuple<Matrix<T>, Matrix<T>, Matrix<T>> svd(const Matrix<T>& matrix);
+	std::tuple<Matrix<T>, Matrix<T>, Matrix<T>> svd(const Matrix<T>& matrix) {
+		throw std::logic_error("Not implemented");
+	}
 
 	template <typename T>
-	std::size_t rank(const Matrix<T>& matrix);
+	std::size_t rank(const Matrix<T>& matrix) {
+		throw std::logic_error("Not implemented");
+	}
 
 	template <typename T>
-	T det(const Matrix<T>& matrix);
+	T det(const Matrix<T>& matrix) {
+		throw std::logic_error("Not implemented");
+	}
 
 	template <typename T>
-	T trace(const Matrix<T>& matrix, int k = 0);
+	T trace(const Matrix<T>& matrix, int k = 0) {
+		throw std::logic_error("Not implemented");
+	}
 }
 
 #endif

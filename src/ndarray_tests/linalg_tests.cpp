@@ -3,83 +3,86 @@
 #include "../ndarray/matrix.hpp"
 #include "../ndarray/linalg.hpp"
 
+#include "generated_tests_io.hpp"
+#include "general_tests.hpp"
+
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
+using namespace generated_tests;
 
 namespace linalg_tests {
+	std::vector<ndarray::Matrix<double>> inputs;
+
 	TEST_CLASS(LinearAlgebra) {
 public:
+	TEST_CLASS_INITIALIZE(ReadGeneratedTestDefinitions)
+	{
+		if (inputs.empty())
+			read_inputs(tests_path + "inputs.bin", inputs);
+	}
 	TEST_METHOD(Dot) {
-		ndarray::Matrix<double> identity_3 = ndarray::Matrix<double>::eye(3, 0);
-		ndarray::Matrix<double> identity_5 = ndarray::Matrix<double>::eye(5, 0);
-		ndarray::Matrix<double> a(3, 5, std::vector<double> { 
-			1.0, 2.0, 3.0, 4.0, 5.0,
-			6.0, 7.0, 8.0, 9.0, 10.0,
-			9.0, 8.0, 7.0, 6.0, 5.0,
-		});
-		ndarray::Matrix<double> b(5, 7, std::vector<double> {
-			1.0, 2.0, 3.0, 4.0, 5.0, -1.0, -2.0,
-			6.0, 7.0, 8.0, 9.0, 10.0, -1.0, -2.0,
-			9.0, 8.0, 7.0, 6.0, 5.0, -1.0, -2.0,
-			1.0, 2.0, 3.0, 4.0, 5.0, -1.0, -2.0,
-			6.0, 7.0, 8.0, 9.0, 10.0, -1.0, -2.0,
-		});
-
-		ndarray::Matrix<double> r1 = ndarray::dot(identity_3, a);
-		ndarray::Matrix<double> r2 = ndarray::dot(a, identity_5);
-
-		Assert::IsTrue((r1 == a).reduce_all());
-		Assert::IsTrue((r2 == a).reduce_all());
-		Assert::IsTrue((r1 == r2).reduce_all());
-
-		ndarray::Matrix<double> r3 = ndarray::dot(a, b);
-		Assert::AreEqual(r3.rows(), a.rows());
-		Assert::AreEqual(r3.cols(), b.cols());
+		std::vector<TestOutput<double>> outputs;
+		read_outputs(tests_path + "LinearAlgebra/dot.bin", outputs);
+		run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double>& m1, const ndarray::Matrix<double>& m2) { return ndarray::dot(m1, m2); });
 	}
 	TEST_METHOD(Transpose) {
-		ndarray::Matrix<double> a(3, 5, std::vector<double> {
-			1.0, 2.0, 3.0, 4.0, 5.0,
-			6.0, 7.0, 8.0, 9.0, 10.0,
-			9.0, 8.0, 7.0, 6.0, 5.0,
-		});
-		ndarray::Matrix<double> b = ndarray::transpose(a);
-
-		Assert::AreEqual(a.rows(), b.cols());
-		Assert::AreEqual(a.cols(), b.rows());
-
-		for (size_t row = 0; row < a.rows(); row++) {
-			for (size_t col = 0; col < a.cols(); col++) {
-				Assert::AreEqual(a.get(row, col), b.get(col, row));
-			}
-		}
+		std::vector<TestOutput<double>> outputs;
+		read_outputs(tests_path + "LinearAlgebra/transpose.bin", outputs);
+		run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double>& m1) { return ndarray::transpose(m1); });
 	}
 	TEST_METHOD(Inverse) {
-		ndarray::Matrix<double> identity = ndarray::Matrix<double>::eye(5, 0);
-		ndarray::Matrix<double> inverted_identity = ndarray::inverse(identity);
-
-		Assert::IsTrue((identity == inverted_identity).reduce_all());
-
-
+		std::vector<TestOutput<double>> outputs;
+		read_outputs(tests_path + "LinearAlgebra/inverse.bin", outputs);
+		run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double>& m1) { return ndarray::inverse(m1); });
 	}
 	TEST_METHOD(PseudoInverse) {
-	
+		std::vector<TestOutput<double>> outputs;
+		read_outputs(tests_path + "LinearAlgebra/pseudoinverse.bin", outputs);
+		run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double>& m1) { return ndarray::pseudo_inverse(m1); });
 	}
-	TEST_METHOD(Eig) {
-	
+	TEST_METHOD(EigVals) {
+		std::vector<TestOutput<double>> outputs;
+		read_outputs(tests_path + "LinearAlgebra/eigenvalues.bin", outputs);
+		run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double>& m1) { return std::get<0>(ndarray::eig(m1)); });
+	}
+	TEST_METHOD(EigVectors) {
+		std::vector<TestOutput<double>> outputs;
+		read_outputs(tests_path + "LinearAlgebra/eigenvectors.bin", outputs);
+		run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double>& m1) { return std::get<1>(ndarray::eig(m1)); });
 	}
 	TEST_METHOD(Cholesky) {
-	
+		std::vector<TestOutput<double>> outputs;
+		read_outputs(tests_path + "LinearAlgebra/cholesky.bin", outputs);
+		run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double>& m1) { return ndarray::cholesky(m1); });
 	}
-	TEST_METHOD(SVD) {
-	
+	TEST_METHOD(SVD_U) {
+		std::vector<TestOutput<double>> outputs;
+		read_outputs(tests_path + "LinearAlgebra/svd-u.bin", outputs);
+		run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double>& m1) { return std::get<0>(ndarray::svd(m1)); });
+	}
+	TEST_METHOD(SVD_Sigma) {
+		std::vector<TestOutput<double>> outputs;
+		read_outputs(tests_path + "LinearAlgebra/svd-sigma.bin", outputs);
+		run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double>& m1) { return std::get<1>(ndarray::svd(m1)); });
+	}
+	TEST_METHOD(SVD_V) {
+		std::vector<TestOutput<double>> outputs;
+		read_outputs(tests_path + "LinearAlgebra/svd-v.bin", outputs);
+		run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double>& m1) { return std::get<2>(ndarray::svd(m1)); });
 	}
 	TEST_METHOD(Rank) {
-	
+		std::vector<TestOutput<double>> outputs;
+		read_outputs(tests_path + "LinearAlgebra/rank.bin", outputs);
+		run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double>& m1) { return ndarray::Matrix<double>(1, 1, { (double)ndarray::rank(m1) }); });
 	}
 	TEST_METHOD(Determinant) {
-	
+		std::vector<TestOutput<double>> outputs;
+		read_outputs(tests_path + "LinearAlgebra/determinant.bin", outputs);
+		run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double>& m1) { return ndarray::Matrix<double>(1, 1, { ndarray::det(m1) }); });
 	}
 	TEST_METHOD(Trace) {
-	
+		std::vector<TestOutput<double>> outputs;
+		read_outputs(tests_path + "LinearAlgebra/trace.bin", outputs);
+		run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double>& m1) { return ndarray::Matrix<double>(1, 1, { ndarray::trace(m1) }); });
 	}
 	};
 }
