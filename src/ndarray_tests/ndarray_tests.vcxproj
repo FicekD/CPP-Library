@@ -160,9 +160,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="arithmetic_tests.cpp" />
+    <ClCompile Include="bitwise_tests.cpp" />
     <ClCompile Include="core_tests.cpp" />
     <ClCompile Include="generated_tests_io.hpp" />
-    <ClCompile Include="logical_ops_tests.cpp" />
+    <ClCompile Include="logical_tests.cpp" />
     <ClCompile Include="linalg_tests.cpp" />
   </ItemGroup>
   <ItemGroup>

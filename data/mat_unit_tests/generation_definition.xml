@@ -84,5 +84,15 @@
                 <Weight>100</Weight>
             </Option>
         </Transform>
+        <Property>
+            <Option>
+                <Name>Default</Name>
+                <Weight>10</Weight>
+            </Option>
+            <Option>
+                <Name>PositiveSemiDefinite</Name>
+                <Weight>10</Weight>
+            </Option>
+        </Property>
     </Generation>
 </MatrixGeneration>

@@ -39,6 +39,7 @@ class GenerationDefinition:
     generation_options: list[RangeOption]
     sign_options: list[Option]
     transform_options: list[Option]
+    property_options: list[Option]
 
 
 @dataclass
@@ -82,6 +83,7 @@ def get_generation_definition(path: str) -> GenerationDefinition:
     generation_options = parse_range_options_fn(root.find('Generation').find('Values'))
     sign_options = parse_options_fn(root.find('Generation').find('Sign'))
     transform_options = parse_options_fn(root.find('Generation').find('Transform'))
+    property_options = parse_options_fn(root.find('Generation').find('Property'))
 
     return GenerationDefinition(
         n,
@@ -89,7 +91,8 @@ def get_generation_definition(path: str) -> GenerationDefinition:
         dims,
         generation_options,
         sign_options,
-        transform_options
+        transform_options,
+        property_options
     )
 
 
@@ -131,6 +134,11 @@ def generate_inputs(definition: GenerationDefinition) -> list[np.ndarray]:
         'zeros': lambda _x: _x * (np.random.random_sample(_x.shape) > 0.5).astype(_x.dtype),
     }
 
+    property_map = {
+        'default': lambda _x: _x,
+        'positivesemidefinite': lambda _x: _x @ _x.T,
+    }
+
     inputs = list()
     for i in range(definition.n):
         resolution = np.random.choice(definition.dims)
@@ -138,10 +146,12 @@ def generate_inputs(definition: GenerationDefinition) -> list[np.ndarray]:
         value_range = roll_for_weights(definition.generation_options).limits
         sign = roll_for_weights(definition.sign_options).name
         transform = roll_for_weights(definition.transform_options).name
+        prop = roll_for_weights(definition.property_options).name
 
         mat = (value_range[1] - value_range[0]) * np.random.random_sample((resolution.height, resolution.width)) + value_range[0]
         mat = sign_map[sign](mat)
         mat = transform_map[transform](mat)
+        mat = property_map[prop](mat)
 
         mat = mat.astype(definition.dtype)
         inputs.append(mat)
@@ -168,6 +178,11 @@ def get_outputs(inputs: list[np.ndarray], test_definition: TestDefinition) -> li
         
         try:
             output = test_definition.numpy_fn(*op_inputs)
+            if len(output.shape) == 0:
+                output = output.reshape(1, 1)
+            elif len(output.shape) == 1:
+                output = output.reshape(-1, 1)
+            output = output.astype(op_inputs[0].dtype)
         except:
             output = None
 

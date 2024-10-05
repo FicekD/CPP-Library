@@ -6,7 +6,7 @@
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace linalg_tests {
-	TEST_CLASS(linalg_tests) {
+	TEST_CLASS(LinearAlgebra) {
 public:
 	TEST_METHOD(Dot) {
 		ndarray::Matrix<double> identity_3 = ndarray::Matrix<double>::eye(3, 0);

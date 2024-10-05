@@ -6,7 +6,7 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace core_tests
 {
-	TEST_CLASS(core_tests) {
+	TEST_CLASS(Core) {
 	public:
 		TEST_METHOD(ConstructorDims) {
 			ndarray::Matrix<int> matrix_square(10, 10);

@@ -22,13 +22,15 @@ namespace arithmetic_tests {
 			std::vector<TestOutput<double>> outputs;
 			read_outputs(tests_path + "Arithmetic/positive.bin", outputs);
 			run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double>& m1) { return +m1; });
-			run_generated_test_inplace<double>(inputs, outputs, [](ndarray::Matrix<double>& m1) { m1.inplace_positive(); });
+			run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double>& m1) { return m1.positive(); });
+			run_generated_test_inplace<double>(inputs, outputs, [](ndarray::Matrix<double>& m1) { m1.positive_inplace(); });
 		}
 		TEST_METHOD(Negative) {
 			std::vector<TestOutput<double>> outputs;
 			read_outputs(tests_path + "Arithmetic/negative.bin", outputs);
 			run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double>& m1) { return -m1; });
-			run_generated_test_inplace<double>(inputs, outputs, [](ndarray::Matrix<double>& m1) { m1.inplace_negative(); });
+			run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double>& m1) { return m1.negative(); });
+			run_generated_test_inplace<double>(inputs, outputs, [](ndarray::Matrix<double>& m1) { m1.negative_inplace(); });
 		}
 		TEST_METHOD(Addition) {
 			std::vector<TestOutput<double>> outputs;

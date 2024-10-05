@@ -99,10 +99,10 @@ namespace ndarray {
             }
         }
 
-        void inplace_positive() {
+        void positive_inplace() {
             map_inplace([](const T& x) -> T { return +x; });
         }
-        void inplace_negative() {
+        void negative_inplace() {
             map_inplace([](const T& x) -> T { return -x; });
         }
         void add_inplace(const T& scalar) {
@@ -205,6 +205,80 @@ namespace ndarray {
         }
         void sign_inplace() {
             map_inplace([](const T& x) -> T { return (x > T(0)) - (x < T(0)); });
+        }
+
+        void less_inplace(const BaseArray<T>& arr) {
+            map_inplace([](const T& x1, const T& x2) -> T { return x1 < x2; }, arr);
+        }
+        void less_inplace(const T& scalar) {
+            map_inplace([scalar](const T& x) -> T { return x < scalar; });
+        }
+        void less_equal_inplace(const BaseArray<T>& arr) {
+            map_inplace([](const T& x1, const T& x2) -> T { return x1 <= x2; }, arr);
+        }
+        void less_equal_inplace(const T& scalar) {
+            map_inplace([scalar](const T& x) -> T { return x <= scalar; });
+        }
+        void greater_inplace(const BaseArray<T>& arr) {
+            map_inplace([](const T& x1, const T& x2) -> T { return x1 > x2; }, arr);
+        }
+        void greater_inplace(const T& scalar) {
+            map_inplace([scalar](const T& x) -> T { return x > scalar; });
+        }
+        void greater_equal_inplace(const BaseArray<T>& arr) {
+            map_inplace([](const T& x1, const T& x2) -> T { return x1 >= x2; }, arr);
+        }
+        void greater_equal_inplace(const T& scalar) {
+            map_inplace([scalar](const T& x) -> T { return x >= scalar; });
+        }
+        void equal_inplace(const BaseArray<T>& arr) {
+            map_inplace([](const T& x1, const T& x2) -> T { return x1 == x2; }, arr);
+        }
+        void equal_inplace(const T& scalar) {
+            map_inplace([scalar](const T& x) -> T { return x == scalar; });
+        }
+        void not_equal_inplace(const BaseArray<T>& arr) {
+            map_inplace([](const T& x1, const T& x2) -> T { return x1 != x2; }, arr);
+        }
+        void not_equal_inplace(const T& scalar) {
+            map_inplace([scalar](const T& x) -> T { return x != scalar; });
+        }
+        void logical_or_inplace(const BaseArray<T>& arr) {
+            map_inplace([](const T& x1, const T& x2) -> T { return x1 || x2; }, arr);
+        }
+        void logical_or_inplace(const T& scalar) {
+            map_inplace([scalar](const T& x) -> T { return x || scalar; });
+        }
+        void logical_and_inplace(const BaseArray<T>& arr) {
+            map_inplace([](const T& x1, const T& x2) -> T { return x1 && x2; }, arr);
+        }
+        void logical_and_inplace(const T& scalar) {
+            map_inplace([scalar](const T& x) -> T { return x && scalar; });
+        }
+        void logical_not_inplace() {
+            map_inplace([](const T& x) -> T { return !x; });
+        }
+
+        void bitwise_or_inplace(const BaseArray<T>& arr) {
+            map_inplace([](const T& x1, const T& x2) -> T { return x1 | x2; }, arr);
+        }
+        void bitwise_or_inplace(const T& scalar) {
+            map_inplace([scalar](const T& x) -> T { return x | scalar; });
+        }
+        void bitwise_and_inplace(const BaseArray<T>& arr) {
+            map_inplace([](const T& x1, const T& x2) -> T { return x1 & x2; }, arr);
+        }
+        void bitwise_and_inplace(const T& scalar) {
+            map_inplace([scalar](const T& x) -> T { return x & scalar; });
+        }
+        void bitwise_xor_inplace(const BaseArray<T>& arr) {
+            map_inplace([](const T& x1, const T& x2) -> T { return x1 ^ x2; }, arr);
+        }
+        void bitwise_xor_inplace(const T& scalar) {
+            map_inplace([scalar](const T& x) -> T { return x ^ scalar; });
+        }
+        void bitwise_not_inplace() {
+            map_inplace([](const T& x) -> T { return ~x; });
         }
 
         T reduce_sum() const {

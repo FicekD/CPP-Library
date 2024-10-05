@@ -148,9 +148,139 @@
         </Test>
     </Arithmetic>
     <Logical>
-
+        <Test>
+            <Name>Less</Name>
+            <Unary>False</Unary>
+            <PythonCall>np.less</PythonCall>
+        </Test>
+        <Test>
+            <Name>LessEqual</Name>
+            <Unary>False</Unary>
+            <PythonCall>np.less_equal</PythonCall>
+        </Test>
+        <Test>
+            <Name>Greater</Name>
+            <Unary>False</Unary>
+            <PythonCall>np.greater</PythonCall>
+        </Test>
+        <Test>
+            <Name>GreaterEqual</Name>
+            <Unary>False</Unary>
+            <PythonCall>np.greater_equal</PythonCall>
+        </Test>
+        <Test>
+            <Name>Equal</Name>
+            <Unary>False</Unary>
+            <PythonCall>np.equal</PythonCall>
+        </Test>
+        <Test>
+            <Name>NotEqual</Name>
+            <Unary>False</Unary>
+            <PythonCall>np.not_equal</PythonCall>
+        </Test>
+        <Test>
+            <Name>LogicalOr</Name>
+            <Unary>False</Unary>
+            <PythonCall>np.logical_or</PythonCall>
+        </Test>
+        <Test>
+            <Name>LogicalAnd</Name>
+            <Unary>False</Unary>
+            <PythonCall>np.logical_and</PythonCall>
+        </Test>
+        <Test>
+            <Name>LogicalNot</Name>
+            <Unary>True</Unary>
+            <PythonCall>np.logical_not</PythonCall>
+        </Test>
     </Logical>
+    <Bitwise>
+        <Test>
+            <Name>BitwiseOr</Name>
+            <Unary>False</Unary>
+            <PythonCall>np.bitwise_or</PythonCall>
+        </Test>
+        <Test>
+            <Name>BitwiseAnd</Name>
+            <Unary>False</Unary>
+            <PythonCall>np.bitwise_and</PythonCall>
+        </Test>
+        <Test>
+            <Name>BitwiseXor</Name>
+            <Unary>False</Unary>
+            <PythonCall>np.bitwise_xor</PythonCall>
+        </Test>
+        <Test>
+            <Name>BitwiseNot</Name>
+            <Unary>True</Unary>
+            <PythonCall>np.bitwise_not</PythonCall>
+        </Test>
+    </Bitwise>
     <LinearAlgebra>
-
+        <Test>
+            <Name>Dot</Name>
+            <Unary>False</Unary>
+            <PythonCall>np.dot</PythonCall>
+        </Test>
+        <Test>
+            <Name>Transpose</Name>
+            <Unary>True</Unary>
+            <PythonCall>np.transpose</PythonCall>
+        </Test>
+        <Test>
+            <Name>Inverse</Name>
+            <Unary>True</Unary>
+            <PythonCall>np.linalg.inv</PythonCall>
+        </Test>
+        <Test>
+            <Name>PseudoInverse</Name>
+            <Unary>True</Unary>
+            <PythonCall>np.linalg.pinv</PythonCall>
+        </Test>
+        <Test>
+            <Name>EigenValues</Name>
+            <Unary>True</Unary>
+            <PythonCall>lambda _x: np.linalg.eig(_x)[0]</PythonCall>
+        </Test>
+        <Test>
+            <Name>EigenVectors</Name>
+            <Unary>True</Unary>
+            <PythonCall>lambda _x: np.linalg.eig(_x)[1]</PythonCall>
+        </Test>
+        <Test>
+            <Name>Cholesky</Name>
+            <Unary>True</Unary>
+            <PythonCall>np.linalg.cholesky</PythonCall>
+        </Test>
+        <Test>
+            <Name>SVD-U</Name>
+            <Unary>True</Unary>
+            <PythonCall>lambda _x: np.linalg.svd(_x)[0]</PythonCall>
+        </Test>
+        <Test>
+            <Name>SVD-Sigma</Name>
+            <Unary>True</Unary>
+            <PythonCall>lambda _x: np.linalg.svd(_x)[1]</PythonCall>
+        </Test>
+        <Test>
+            <Name>SVD-V</Name>
+            <Unary>True</Unary>
+            <PythonCall>lambda _x: np.linalg.svd(_x)[2]</PythonCall>
+        </Test>
+        <Test>
+            <Name>Rank</Name>
+            <Unary>True</Unary>
+            <PythonCall>np.linalg.matrix_rank</PythonCall>
+        </Test>
+        <Test>
+            <Name>Determinant</Name>
+            <Unary>True</Unary>
+            <PythonCall>np.linalg.det</PythonCall>
+        </Test>
+        <Test>
+            <Name>Trace</Name>
+            <Unary>True</Unary>
+            <PythonCall>np.trace</PythonCall>
+        </Test>
     </LinearAlgebra>
 </MatUnitTests>
