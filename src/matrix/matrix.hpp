@@ -11,43 +11,60 @@
 #include <format>
 #include <algorithm>
 
-#include "array.hpp"
+#include "base_array.hpp"
+#include "ndarray.hpp"
 
-namespace matrix {
+namespace ndarray {
     enum Dim {
         ROWS, COLS
     };
 
     template <typename T>
-    class Matrix : public BaseArray<T> {
+    class Matrix : public NDArray<T, Matrix<T>, Matrix<bool>> {
     private:
         std::size_t _rows = 0, _cols = 0;
     public:
 
 #pragma region CONSTRUCTORS
         Matrix() {}
-        Matrix(const Matrix<T>& matrix) noexcept : _rows(matrix._rows), _cols(matrix._cols), BaseArray<T>(matrix.size()) {
+        Matrix(const Matrix<T>& matrix) noexcept : _rows(matrix._rows), _cols(matrix._cols), NDArray<T, Matrix<T>, Matrix<bool>>(matrix.size()) {
             if (size() > 0) {
                 BaseArray<T>::_data = std::unique_ptr<T[]>(new T[matrix.size()]);
                 std::memcpy(BaseArray<T>::_data.get(), matrix.BaseArray<T>::_data.get(), matrix.size() * sizeof(T));
             }
         }
-        Matrix(Matrix<T>&& matrix) noexcept : _rows(matrix._rows), _cols(matrix._cols), BaseArray<T>() {
+        Matrix(Matrix<T>&& matrix) noexcept : _rows(matrix._rows), _cols(matrix._cols), NDArray<T, Matrix<T>, Matrix<bool>>() {
             BaseArray<T>::_size = matrix.size();
             BaseArray<T>::_data = std::move(matrix.BaseArray<T>::_data);
             matrix.clear();
         }
-        Matrix(std::size_t rows, std::size_t cols) noexcept : _rows(rows), _cols(cols), BaseArray<T>(cols * rows) {
+        Matrix(std::size_t rows, std::size_t cols) noexcept : _rows(rows), _cols(cols), NDArray<T, Matrix<T>, Matrix<bool>>(cols * rows) {
             if (size() > 0)
                 BaseArray<T>::_data = std::unique_ptr<T[]>(new T[size()] { T() });
         }
-        Matrix(std::size_t rows, std::size_t cols, T* data) noexcept : _rows(rows), _cols(cols), BaseArray<T>(cols * rows) {
+        Matrix(const Shape& shape) noexcept : _rows(shape[0]), _cols(shape[1]), NDArray<T, Matrix<T>, Matrix<bool>>(shape[0] * shape[1]) {
+            if (size() > 0)
+                BaseArray<T>::_data = std::unique_ptr<T[]>(new T[size()]{ T() });
+        }
+        Matrix(std::size_t rows, std::size_t cols, T* data) noexcept : _rows(rows), _cols(cols), NDArray<T, Matrix<T>, Matrix<bool>>(cols * rows) {
             if (size() > 0) {
                 BaseArray<T>::_data = std::unique_ptr<T[]>(new T[size()]);
                 std::memcpy(BaseArray<T>::_data.get(), data, size() * sizeof(T));
             }
         }
-        Matrix(std::size_t rows, std::size_t cols, const std::vector<T>& data) noexcept : _rows(rows), _cols(cols), BaseArray<T>(cols * rows) {
+        Matrix(const Shape& shape, T* data) noexcept : _rows(shape[0]), _cols(shape[1]), NDArray<T, Matrix<T>, Matrix<bool>>(shape[0] * shape[1]) {
+            if (size() > 0) {
+                BaseArray<T>::_data = std::unique_ptr<T[]>(new T[size()]);
+                std::memcpy(BaseArray<T>::_data.get(), data, size() * sizeof(T));
+            }
+        }
+        Matrix(std::size_t rows, std::size_t cols, const std::vector<T>& data) noexcept : _rows(rows), _cols(cols), NDArray<T, Matrix<T>, Matrix<bool>>(cols * rows) {
+            if (size() > 0) {
+                BaseArray<T>::_data = std::unique_ptr<T[]>(new T[size()]);
+                std::memcpy(BaseArray<T>::_data.get(), data.data(), size() * sizeof(T));
+            }
+        }
+        Matrix(const Shape& shape, const std::vector<T>& data) noexcept : _rows(shape[0]), _cols(shape[1]), NDArray<T, Matrix<T>, Matrix<bool>>(cols* rows) {
             if (size() > 0) {
                 BaseArray<T>::_data = std::unique_ptr<T[]>(new T[size()]);
                 std::memcpy(BaseArray<T>::_data.get(), data.data(), size() * sizeof(T));
@@ -122,16 +139,14 @@ namespace matrix {
         std::size_t rows() const { return _rows; }
         std::size_t cols() const { return _cols; }
 
+        Shape shape() const {
+            return Shape(_rows, _cols);
+        }
+
         void clear() {
             _rows = 0;
             _cols = 0;
             BaseArray<T>::clear();
-        }
-
-        template <typename T1, typename T2>
-        static void _except_on_2d_mismatch(const Matrix<T1>& m1, const Matrix<T2>& m2) {
-            if (m1._rows != m2._rows || m1._cols != m2._cols)
-                throw std::invalid_argument("Matricies shape mismatch");
         }
 
         std::size_t ravel_indices(std::size_t row, std::size_t col) const {
@@ -177,369 +192,9 @@ namespace matrix {
 
 #pragma endregion CORE
 
-#pragma region MATH_OPS
+#pragma region DERIVED_OPS
 
-        using BaseArray<T>::positive_inplace;
-        using BaseArray<T>::negative_inplace;
-
-        using BaseArray<T>::add_inplace;
-        using BaseArray<T>::subtract_inplace;
-        using BaseArray<T>::multiply_inplace;
-        using BaseArray<T>::divide_inplace;
-        using BaseArray<T>::square_inplace;
-        using BaseArray<T>::sqrt_inplace;
-        using BaseArray<T>::pow_inplace;
-        using BaseArray<T>::exp_inplace;
-        using BaseArray<T>::exp2_inplace;
-        using BaseArray<T>::exp10_inplace;
-        using BaseArray<T>::log_inplace;
-        using BaseArray<T>::log2_inplace;
-        using BaseArray<T>::log10_inplace;
-
-        using BaseArray<T>::sin_inplace;
-        using BaseArray<T>::cos_inplace;
-        using BaseArray<T>::tan_inplace;
-        using BaseArray<T>::arcsin_inplace;
-        using BaseArray<T>::arccos_inplace;
-        using BaseArray<T>::arctan_inplace;
-        using BaseArray<T>::deg2rad_inplace;
-        using BaseArray<T>::rad2deg_inplace;
-        
-        using BaseArray<T>::abs_inplace;
-        using BaseArray<T>::clamp_inplace;
-        using BaseArray<T>::round_inplace;
-        using BaseArray<T>::floor_inplace;
-        using BaseArray<T>::ceil_inplace;
-        using BaseArray<T>::trunc_inplace;
-        using BaseArray<T>::sign_inplace;
-
-        template <typename R = T>
-        Matrix<R> map_to_new(const std::function<R(const T&, const T&)>& lambda, const Matrix<T>& matrix) const {
-            Matrix::_except_on_2d_mismatch<T, T>(*this, matrix);
-            Matrix<R> result(_rows, _cols);
-            BaseArray<T>::template map_to<R>(lambda, dynamic_cast<const BaseArray<T>&>(matrix), dynamic_cast<BaseArray<R>&>(result));
-            return result;
-        }
-        template <typename R = T>
-        Matrix<R> map_to_new(const std::function<R(const T&)>& lambda) const {
-            Matrix<R> result(_rows, _cols);
-            BaseArray<T>::template map_to<R>(lambda, dynamic_cast<BaseArray<R>&>(result));
-            return result;
-        }
-        void operator=(const Matrix<T>& matrix) noexcept {
-            if (matrix.size() != size()) {
-                BaseArray<T>::_data.release();
-                BaseArray<T>::_data = std::unique_ptr<T>(new T[matrix.size()]);
-            }
-            std::memcpy(BaseArray<T>::_data.get(), matrix.BaseArray<T>::_data.get(), matrix.size() * sizeof(T));
-            BaseArray<T>::_size = matrix.size();
-            _rows = matrix._rows;
-            _cols = matrix._cols;
-        }
-        Matrix<T> operator+(const Matrix<T>& matrix) const {
-            return add(matrix);
-        }
-        Matrix<T> operator+(const T& scalar) const {
-            return add(scalar);
-        }
-        Matrix<T> operator+() const {
-            return positive();
-        }
-        Matrix<T> operator-(const Matrix<T>& matrix) const {
-            return subtract(matrix);
-        }
-        Matrix<T> operator-(const T& scalar) const {
-            return subtract(scalar);
-        }
-        Matrix<T> operator-() const {
-            return negative();
-        }
-        Matrix<T> operator*(const Matrix<T>& matrix) const {
-            return multiply(matrix);
-        }
-        Matrix<T> operator*(const T& scalar) const {
-            return multiply(scalar);
-        }
-        Matrix<T> operator/(const Matrix<T>& matrix) const {
-            return divide(matrix);
-        }
-        Matrix<T> operator/(const T& scalar) const {
-            return divide(scalar);
-        }
-        Matrix<T> positive() const {
-            return map_to_new<T>([](const T& x) -> T { return +x; });
-        }
-        Matrix<T> negative() const {
-            return map_to_new<T>([](const T& x) -> T { return -x; });
-        }
-        Matrix<T> add(const Matrix<T>& matrix) const {
-            return map_to_new<T>([](const T& x1, const T& x2) -> T { return x1 + x2; }, matrix);
-        }
-        Matrix<T> add(const T& scalar) const {
-            return map_to_new<T>([scalar](const T& x) -> T { return x + scalar; });
-        }
-        Matrix<T> subtract(const Matrix<T>& matrix) const {
-            return map_to_new<T>([](const T& x1, const T& x2) -> T { return x1 - x2; }, matrix);
-        }
-        Matrix<T> subtract(const T& scalar) const {
-            return map_to_new<T>([scalar](const T& x) -> T { return x - scalar; });
-        }
-        Matrix<T> multiply(const Matrix<T>& matrix) const {
-            return map_to_new<T>([](const T& x1, const T& x2) -> T { return x1 * x2; }, matrix);
-        }
-        Matrix<T> multiply(const T& scalar) const {
-            return map_to_new<T>([scalar](const T& x) -> T { return x * scalar; });
-        }
-        Matrix<T> divide(const Matrix<T>& matrix) const {
-            return map_to_new<T>([](const T& x1, const T& x2) -> T { return x1 / x2; }, matrix);
-        }
-        Matrix<T> divide(const T& scalar) const {
-            return map_to_new<T>([scalar](const T& x) -> T { return x / scalar; });
-        }
-        Matrix<T> square() const {
-            return map_to_new<T>([](const T& x1) -> T { return x1 * x1; });
-        }
-        Matrix<T> sqrt() const {
-            return map_to_new<T>([](const T& x1) -> T { return T(std::sqrt(x1)); });
-        }
-        Matrix<T> pow(T power) const {
-            return map_to_new<T>([power](const T& x1) -> T { return T(std::pow(x1, power)); });
-        }
-        Matrix<T> pow(const Matrix<T>& powers) const {
-            return map_to_new<T>([](const T& x1, const T& x2) -> T { return T(std::pow(x1, x2)); }, powers);
-        }
-        Matrix<T> exp() const {
-            return map_to_new<T>([](const T& x1) -> T { return std::exp(x1); });
-        }
-        Matrix<T> exp2() const {
-            return map_to_new<T>([](const T& x1) -> T { return std::exp2(x1); });
-        }
-        Matrix<T> exp10() const {
-            return map_to_new<T>([](const T& x1) -> T { return std::pow(T(10), x1); });
-        }
-        Matrix<T> log() const {
-            return map_to_new<T>([](const T& x1) -> T { return std::log(x1); });
-        }
-        Matrix<T> log2() const {
-            return map_to_new<T>([](const T& x1) -> T { return std::log2(x1); });
-        }
-        Matrix<T> log10() const {
-            return map_to_new<T>([](const T& x1) -> T { return std::log10(x1); });
-        }
-        Matrix<T> sin() const {
-            return map_to_new<T>([](const T& x1) -> T { return std::sin(x1); });
-        }
-        Matrix<T> cos() const {
-            return map_to_new<T>([](const T& x1) -> T { return std::cos(x1); });
-        }
-        Matrix<T> tan() const {
-            return map_to_new<T>([](const T& x1) -> T { return std::tan(x1); });
-        }
-        Matrix<T> arcsin() const {
-            return map_to_new<T>([](const T& x1) -> T { return std::asin(x1); });
-        }
-        Matrix<T> arccos() const {
-            return map_to_new<T>([](const T& x1) -> T { return std::acos(x1); });
-        }
-        Matrix<T> arctan() const {
-            return map_to_new<T>([](const T& x1) -> T { return std::atan(x1); });
-        }
-        Matrix<T> deg2rad() const {
-            return map_to_new<T>([](const T& x1) -> T { return x1 * T(PI / 180.0); });
-        }
-        Matrix<T> rad2deg() const {
-            return map_to_new<T>([](const T& x1) -> T { return x1 * T(180.0 / PI); });
-        }
-        Matrix<T> abs() const {
-            return map_to_new<T>([](const T& x1) -> T { return std::abs(x1); });
-        }
-        Matrix<T> sign() const {
-            return map_to_new<T>([](const T& x1) -> T { return (x1 > T(0)) - (x1 < T(0)); });
-        }
-        Matrix<T> clamp(const T& min, const T& max) const {
-            return map_to_new<T>([min, max](const T& x1) -> T { return std::clamp(x1, min, max); });
-        }
-        Matrix<T> round() const {
-            return map_to_new<T>([](const T& x1) -> T { return std::round(x1); });
-        }
-        Matrix<T> floor() const {
-            return map_to_new<T>([](const T& x1) -> T { return std::floor(x1); });
-        }
-        Matrix<T> ceil() const {
-            return map_to_new<T>([](const T& x1) -> T { return std::ceil(x1); });
-        }
-        Matrix<T> trunc() const {
-            return map_to_new<T>([](const T& x1) -> T { return std::trunc(x1); });
-        }
-
-#pragma endregion MATH_OPS
-
-#pragma region LOGICAL_OPS
-        using BaseArray<T>::less_inplace;
-        using BaseArray<T>::less_equal_inplace;
-        using BaseArray<T>::greater_inplace;
-        using BaseArray<T>::greater_equal_inplace;
-        using BaseArray<T>::equal_inplace;
-        using BaseArray<T>::not_equal_inplace;
-        using BaseArray<T>::logical_or_inplace;
-        using BaseArray<T>::logical_and_inplace;
-        using BaseArray<T>::logical_not_inplace;
-
-        Matrix<bool> operator<(const Matrix<T>& matrix) const {
-            return less(matrix);
-        }
-        Matrix<bool> operator<(const T& scalar) const {
-            return less(scalar);
-        }
-        Matrix<bool> operator<=(const Matrix<T>& matrix) const {
-            return less_equal(matrix);
-        }
-        Matrix<bool> operator<=(const T& scalar) const {
-            return less_equal(scalar);
-        }
-        Matrix<bool> operator>(const Matrix<T>& matrix) const {
-            return greater(matrix);
-        }
-        Matrix<bool> operator>(const T& scalar) const {
-            return greater(scalar);
-        }
-        Matrix<bool> operator>=(const Matrix<T>& matrix) const {
-            return greater_equal(matrix);
-        }
-        Matrix<bool> operator>=(const T& scalar) const {
-            return greater_equal(scalar);
-        }
-        Matrix<bool> operator==(const Matrix<T>& matrix) const {
-            return equal(matrix);
-        }
-        Matrix<bool> operator==(const T& scalar) const {
-            return equal(scalar);
-        }
-        Matrix<bool> operator!=(const Matrix<T>& matrix) const {
-            return not_equal(matrix);
-        }
-        Matrix<bool> operator!=(const T& scalar) const {
-            return not_equal(scalar);
-        }
-        Matrix<bool> operator||(const Matrix<T>& matrix) const {
-            return logical_or(matrix);
-        }
-        Matrix<bool> operator||(const T& scalar) const {
-            return logical_or(scalar);
-        }
-        Matrix<bool> operator&&(const Matrix<T>& matrix) const {
-            return logical_and(matrix);
-        }
-        Matrix<bool> operator&&(const T& scalar) const {
-            return logical_and(scalar);
-        }
-        Matrix<bool> operator!() const {
-            return logical_not();
-        }
-
-        Matrix<bool> less(const Matrix<T>& matrix) const {
-            return map_to_new<bool>([](const T& x1, const T& x2) -> bool { return x1 < x2; }, matrix);
-        }
-        Matrix<bool> less(const T& scalar) const {
-            return map_to_new<bool>([scalar](const T& x1) -> bool { return x1 < scalar; });
-        }
-        Matrix<bool> less_equal(const Matrix<T>& matrix) const {
-            return map_to_new<bool>([](const T& x1, const T& x2) -> bool { return x1 <= x2; }, matrix);
-        }
-        Matrix<bool> less_equal(const T& scalar) const {
-            return map_to_new<bool>([scalar](const T& x1) -> bool { return x1 <= scalar; });
-        }
-        Matrix<bool> greater(const Matrix<T>& matrix) const {
-            return map_to_new<bool>([](const T& x1, const T& x2) -> bool { return x1 > x2; }, matrix);
-        }
-        Matrix<bool> greater(const T& scalar) const {
-            return map_to_new<bool>([scalar](const T& x1) -> bool { return x1 > scalar; });
-        }
-        Matrix<bool> greater_equal(const Matrix<T>& matrix) const {
-            return map_to_new<bool>([](const T& x1, const T& x2) -> bool { return x1 >= x2; }, matrix);
-        }
-        Matrix<bool> greater_equal(const T& scalar) const {
-            return map_to_new<bool>([scalar](const T& x1) -> bool { return x1 >= scalar; });
-        }
-        Matrix<bool> equal(const Matrix<T>& matrix) const {
-            return map_to_new<bool>([](const T& x1, const T& x2) -> bool { return x1 == x2; }, matrix);
-        }
-        Matrix<bool> equal(const T& scalar) const {
-            return map_to_new<bool>([scalar](const T& x1) -> bool { return x1 == scalar; });
-        }
-        Matrix<bool> not_equal(const Matrix<T>& matrix) const {
-            return map_to_new<bool>([](const T& x1, const T& x2) -> bool { return x1 != x2; }, matrix);
-        }
-        Matrix<bool> not_equal(const T& scalar) const {
-            return map_to_new<bool>([scalar](const T& x1) -> bool { return x1 != scalar; });
-        }
-        Matrix<bool> logical_or(const Matrix<T>& matrix) const {
-            return map_to_new<bool>([](const T& x1, const T& x2) -> bool { return x1 || x2; }, matrix);
-        }
-        Matrix<bool> logical_or(const T& scalar) const {
-            return map_to_new<bool>([scalar](const T& x1) -> bool { return x1 || scalar; });
-        }
-        Matrix<bool> logical_and(const Matrix<T>& matrix) const {
-            return map_to_new<bool>([](const T& x1, const T& x2) -> bool { return x1 && x2; }, matrix);
-        }
-        Matrix<bool> logical_and(const T& scalar) const {
-            return map_to_new<bool>([scalar](const T& x1) -> bool { return x1 && scalar; });
-        }
-        Matrix<bool> logical_not() const {
-            return map_to_new<bool>([](const T& x1) -> bool { return !x1; });
-        }
-#pragma endregion LOGICAL_OPS
-
-#pragma region BITWISE_OPS
-        using BaseArray<T>::bitwise_or_inplace;
-        using BaseArray<T>::bitwise_and_inplace;
-        using BaseArray<T>::bitwise_xor_inplace;
-        using BaseArray<T>::bitwise_not_inplace;
-
-        Matrix<T> operator|(const Matrix<T>& matrix) const {
-            return bitwise_or(matrix);
-        }
-        Matrix<T> operator|(const T& scalar) const {
-            return bitwise_or(scalar);
-        }
-        Matrix<T> operator&(const Matrix<T>& matrix) const {
-            return bitwise_and(matrix);
-        }
-        Matrix<T> operator&(const T& scalar) const {
-            return bitwise_and(scalar);
-        }
-        Matrix<T> operator^(const Matrix<T>& matrix) const {
-            return bitwise_xor(matrix);
-        }
-        Matrix<T> operator^(const T& scalar) const {
-            return bitwise_xor(scalar);
-        }
-        Matrix<T> operator~() const {
-            return bitwise_not();
-        }
-
-        Matrix<T> bitwise_or(const Matrix<T>& matrix) const {
-            return map_to_new<T>([](const T& x1, const T& x2) -> T { return x1 | x2; }, matrix);
-        }
-        Matrix<T> bitwise_or(const T& scalar) const {
-            return map_to_new<T>([scalar](const T& x1) -> T { return x1 | scalar; });
-        }
-        Matrix<T> bitwise_and(const Matrix<T>& matrix) const {
-            return map_to_new<T>([](const T& x1, const T& x2) -> T { return x1 & x2; }, matrix);
-        }
-        Matrix<T> bitwise_and(const T& scalar) const {
-            return map_to_new<T>([scalar](const T& x1) -> T { return x1 & scalar; });
-        }
-        Matrix<T> bitwise_xor(const Matrix<T>& matrix) const {
-            return map_to_new<T>([](const T& x1, const T& x2) -> T { return x1 ^ x2; }, matrix);
-        }
-        Matrix<T> bitwise_xor(const T& scalar) const {
-            return map_to_new<T>([scalar](const T& x1) -> T { return x1 ^ scalar; });
-        }
-        Matrix<T> bitwise_not() const {
-            return map_to_new<T>([](const T& x) -> T { return ~x; });
-        }
-#pragma endregion BITWISE_OPS
+#pragma endregion DERIVED_OPS
         
 #pragma region REDUCE
         using BaseArray<T>::reduce_sum;

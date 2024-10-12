@@ -137,9 +137,10 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="array.hpp" />
+    <ClInclude Include="base_array.hpp" />
     <ClInclude Include="linalg.hpp" />
     <ClInclude Include="matrix.hpp" />
+    <ClInclude Include="ndarray.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

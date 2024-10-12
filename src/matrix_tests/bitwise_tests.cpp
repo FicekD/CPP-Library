@@ -9,7 +9,7 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace generated_tests;
 
 namespace bitwise_tests {
-	std::vector<matrix::Matrix<double>> inputs;
+	std::vector<ndarray::Matrix<double>> inputs;
 
 	TEST_CLASS(Bitwise) {
 public:

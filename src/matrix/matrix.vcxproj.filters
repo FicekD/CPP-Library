@@ -23,10 +23,13 @@
     <ClInclude Include="matrix.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="array.hpp">
+    <ClInclude Include="base_array.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="linalg.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ndarray.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

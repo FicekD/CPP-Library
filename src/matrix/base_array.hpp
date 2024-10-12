@@ -11,9 +11,9 @@
 #include <format>
 #include <algorithm>
 
-constexpr double PI = 3.141592653589793238463;
 
-namespace matrix {
+namespace ndarray {
+    constexpr double PI = 3.141592653589793238463;
 	
 	template <typename T>
 	class BaseArray {
@@ -65,9 +65,8 @@ namespace matrix {
 			return _data.get()[x];
 		}
 
-        template <typename T1, typename T2>
-        static void _except_on_size_mismatch(const BaseArray<T1>& arr1, const BaseArray<T2>& arr2) {
-            if (arr1.size() != arr2.size())
+        static void _except_on_size_mismatch(std::size_t size1, std::size_t size2) {
+            if (size1 != size2)
                 throw std::invalid_argument("Size mismatch");
         }
         void map_inplace(const std::function<T(const T&)>& lambda) {
@@ -77,7 +76,7 @@ namespace matrix {
             }
         }
         void map_inplace(const std::function<T(const T&, const T&)>& lambda, const BaseArray<T>& arr) {
-            _except_on_size_mismatch<T, T>(*this, arr);
+            BaseArray<T>::_except_on_size_mismatch(this->size(), arr.size());
             for (int i = 0; i < _size; i++) {
                 T& ref = this->at(i);
                 ref = lambda(ref, arr.get(i));
@@ -85,15 +84,15 @@ namespace matrix {
         }
         template <typename R = T>
         void map_to(const std::function<R(const T&)>& lambda, BaseArray<R>& target) const {
-            _except_on_size_mismatch<T, R>(*this, target);
+            BaseArray<T>::_except_on_size_mismatch(this->size(), target.size());
             for (int i = 0; i < _size; i++) {
                 target.at(i) = lambda(this->get(i));
             }
         }
         template <typename R = T>
         void map_to(const std::function<R(const T&, const T&)>& lambda, const BaseArray<T>& arr, BaseArray<R>& target) const {
-            _except_on_size_mismatch<T, T>(*this, arr);
-            _except_on_size_mismatch<T, R>(*this, target);
+            BaseArray<T>::_except_on_size_mismatch(this->size(), arr.size());
+            BaseArray<T>::_except_on_size_mismatch(this->size(), target.size());
             for (int i = 0; i < _size; i++) {
                 target.at(i) = lambda(this->get(i), arr.get(i));
             }
