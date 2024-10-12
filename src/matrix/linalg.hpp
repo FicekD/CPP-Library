@@ -120,7 +120,26 @@ namespace matrix {
 
 	template <typename T>
 	Matrix<T> cholesky(const Matrix<T>& matrix) {
-		throw std::logic_error("Not implemented");
+		if (matrix.cols() != matrix.rows())
+			throw std::invalid_argument("Matrix has to be square");
+
+		Matrix<T> result(matrix.rows(), matrix.rows());
+		for (int j = 0; j < matrix.rows(); j++) {
+			T sum = T(0);
+			for (int k = 0; k < j; k++) {
+				sum += result.get(j, k) * result.get(j, k);
+			}
+			result.at(j, j) = std::sqrt(matrix.get(j, j) - sum);
+
+			for (int i = j + 1; i < matrix.rows(); i++) {
+				sum = T(0);
+				for (int k = 0; k < j; k++) {
+					sum += result.get(i, k) * result.get(j, k);
+				}
+				result.at(i, j) = (1.0 / result.get(j, j) * (matrix.get(i, j) - sum));
+			}
+		}
+		return result;
 	}
 
 	template <typename T>
