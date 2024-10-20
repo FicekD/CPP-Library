@@ -14,12 +14,26 @@
 
 namespace ndarray {
     constexpr double PI = 3.141592653589793238463;
-	
+
+    template <typename T, typename R>
+    struct Reduce {
+        std::function<R(const R&, const T&)> lambda;
+        R initializer;
+    };
+
 	template <typename T>
 	class BaseArray {
 	protected:
 		std::unique_ptr<T[]> _data = nullptr;
 		std::size_t _size = 0;
+
+        const Reduce<T, T> reduce_sum_t{ [](const T& x0, const T& x1) -> T { return x0 + x1; }, T(0) };
+        const Reduce<T, T> reduce_prod_t{ [](const T& x0, const T& x1) -> T { return x0 * x1; }, T(1) };
+        const Reduce<T, T> reduce_max_t{ [](const T& x0, const T& x1) -> T { return x0 > x1 ? x0 : x1; }, T(-INFINITY) };
+        const Reduce<T, T> reduce_min_t{ [](const T& x0, const T& x1) -> T { return x0 < x1 ? x0 : x1; }, T(INFINITY) };
+        const Reduce<T, bool> reduce_any_t{ [] (bool x0, const T& x1) -> bool { return x0 || x1; }, false };
+        const Reduce<T, bool> reduce_all_t{ [] (bool x0, const T& x1) -> bool { return x0 && x1; }, true };
+
 	public:
         BaseArray() {}
 		BaseArray(const BaseArray<T>& arr) noexcept : _size(arr._size) {
@@ -281,22 +295,22 @@ namespace ndarray {
         }
 
         T reduce_sum() const {
-            return std::reduce(_data.get(), _data.get() + _size, T(0), [](const T& x0, const T& x1) -> T { return x0 + x1; });
+            return std::reduce(_data.get(), _data.get() + _size, reduce_sum_t.initializer, reduce_sum_t.lambda);
         }
         T reduce_prod() const {
-            return std::reduce(_data.get(), _data.get() + _size, T(1), [](const T& x0, const T& x1) -> T { return x0 * x1; });
+            return std::reduce(_data.get(), _data.get() + _size, reduce_prod_t.initializer, reduce_prod_t.lambda);
         }
         T reduce_max() const {
-            return std::reduce(_data.get(), _data.get() + _size, T(-INFINITY), [](const T& x0, const T& x1) -> T { return x0 > x1 ? x0 : x1; });
+            return std::reduce(_data.get(), _data.get() + _size, reduce_max_t.initializer, reduce_max_t.lambda);
         }
         T reduce_min() const {
-            return std::reduce(_data.get(), _data.get() + _size, T(INFINITY), [](const T& x0, const T& x1) -> T { return x0 < x1 ? x0 : x1; });
+            return std::reduce(_data.get(), _data.get() + _size, reduce_min_t.initializer, reduce_min_t.lambda);
         }
         bool reduce_any() const {
-            return std::reduce(_data.get(), _data.get() + _size, false, [](bool x0, const T& x1) -> T { return x0 || x1 != 0; });
+            return std::reduce(_data.get(), _data.get() + _size, reduce_any_t.initializer, reduce_any_t.lambda);
         }
         bool reduce_all() const {
-            return std::reduce(_data.get(), _data.get() + _size, true, [](bool x0, const T& x1) -> T { return x0 && x1 != 0; });
+            return std::reduce(_data.get(), _data.get() + _size, reduce_all_t.initializer, reduce_all_t.lambda);
         }
 	};
 }

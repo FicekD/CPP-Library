@@ -15,62 +15,63 @@
 #include "ndarray.hpp"
 
 namespace ndarray {
-    enum Dim {
+
+    enum MatrixDim {
         ROWS, COLS
     };
 
     template <typename T>
-    class Matrix : public NDArray<T, Matrix<T>, Matrix<bool>> {
+    class Matrix : public NDArray<Matrix, T> {
     private:
         std::size_t _rows = 0, _cols = 0;
     public:
 
 #pragma region CONSTRUCTORS
         Matrix() {}
-        Matrix(const Matrix<T>& matrix) noexcept : _rows(matrix._rows), _cols(matrix._cols), NDArray<T, Matrix<T>, Matrix<bool>>(matrix.size()) {
+        Matrix(const Matrix<T>& matrix) noexcept : _rows(matrix._rows), _cols(matrix._cols), NDArray<Matrix, T>(matrix.size()) {
             if (size() > 0) {
                 BaseArray<T>::_data = std::unique_ptr<T[]>(new T[matrix.size()]);
                 std::memcpy(BaseArray<T>::_data.get(), matrix.BaseArray<T>::_data.get(), matrix.size() * sizeof(T));
             }
         }
-        Matrix(Matrix<T>&& matrix) noexcept : _rows(matrix._rows), _cols(matrix._cols), NDArray<T, Matrix<T>, Matrix<bool>>() {
+        Matrix(Matrix<T>&& matrix) noexcept : _rows(matrix._rows), _cols(matrix._cols), NDArray<Matrix, T>() {
             BaseArray<T>::_size = matrix.size();
             BaseArray<T>::_data = std::move(matrix.BaseArray<T>::_data);
             matrix.clear();
         }
-        Matrix(std::size_t rows, std::size_t cols) noexcept : _rows(rows), _cols(cols), NDArray<T, Matrix<T>, Matrix<bool>>(cols * rows) {
+        Matrix(std::size_t rows, std::size_t cols) noexcept : _rows(rows), _cols(cols), NDArray<Matrix, T>(cols * rows) {
             if (size() > 0)
                 BaseArray<T>::_data = std::unique_ptr<T[]>(new T[size()] { T() });
         }
-        Matrix(const Shape& shape) noexcept : _rows(shape[0]), _cols(shape[1]), NDArray<T, Matrix<T>, Matrix<bool>>(shape[0] * shape[1]) {
+        Matrix(const Shape& shape) noexcept : _rows(shape[0]), _cols(shape[1]), NDArray<Matrix, T>(shape[0] * shape[1]) {
             if (size() > 0)
                 BaseArray<T>::_data = std::unique_ptr<T[]>(new T[size()]{ T() });
         }
-        Matrix(std::size_t rows, std::size_t cols, T* data) noexcept : _rows(rows), _cols(cols), NDArray<T, Matrix<T>, Matrix<bool>>(cols * rows) {
+        Matrix(std::size_t rows, std::size_t cols, T* data) noexcept : _rows(rows), _cols(cols), NDArray<Matrix, T>(cols * rows) {
             if (size() > 0) {
                 BaseArray<T>::_data = std::unique_ptr<T[]>(new T[size()]);
                 std::memcpy(BaseArray<T>::_data.get(), data, size() * sizeof(T));
             }
         }
-        Matrix(const Shape& shape, T* data) noexcept : _rows(shape[0]), _cols(shape[1]), NDArray<T, Matrix<T>, Matrix<bool>>(shape[0] * shape[1]) {
+        Matrix(const Shape& shape, T* data) noexcept : _rows(shape[0]), _cols(shape[1]), NDArray<Matrix, T>(shape[0] * shape[1]) {
             if (size() > 0) {
                 BaseArray<T>::_data = std::unique_ptr<T[]>(new T[size()]);
                 std::memcpy(BaseArray<T>::_data.get(), data, size() * sizeof(T));
             }
         }
-        Matrix(std::size_t rows, std::size_t cols, const std::vector<T>& data) noexcept : _rows(rows), _cols(cols), NDArray<T, Matrix<T>, Matrix<bool>>(cols * rows) {
+        Matrix(std::size_t rows, std::size_t cols, const std::vector<T>& data) noexcept : _rows(rows), _cols(cols), NDArray<Matrix, T>(cols * rows) {
             if (size() > 0) {
                 BaseArray<T>::_data = std::unique_ptr<T[]>(new T[size()]);
                 std::memcpy(BaseArray<T>::_data.get(), data.data(), size() * sizeof(T));
             }
         }
-        Matrix(const Shape& shape, const std::vector<T>& data) noexcept : _rows(shape[0]), _cols(shape[1]), NDArray<T, Matrix<T>, Matrix<bool>>(cols* rows) {
+        Matrix(const Shape& shape, const std::vector<T>& data) noexcept : _rows(shape[0]), _cols(shape[1]), NDArray<Matrix, T>(shape[0] * shape[1]) {
             if (size() > 0) {
                 BaseArray<T>::_data = std::unique_ptr<T[]>(new T[size()]);
                 std::memcpy(BaseArray<T>::_data.get(), data.data(), size() * sizeof(T));
             }
         }
-        Matrix(const std::vector<Matrix<T>>& matrices, Dim concat_dim) {
+        Matrix(const std::vector<Matrix<T>>& matrices, MatrixDim concat_dim) {
             if (matrices.size() == 0)
                 throw std::invalid_argument("Empty matrix vector to concat");
             
@@ -164,19 +165,19 @@ namespace ndarray {
             return at(ravel_indices(row, col));
         }
 
+        template <typename U>
+        Matrix<U> astype() const {
+            Matrix<U> result(rows(), cols());
+            for (int i = 0; i < size(); i++)
+                result.at(i) = static_cast<U>(this->get(i));
+            return result;
+        }
+
         void reshape(std::size_t rows, std::size_t cols) {
             if (rows * cols != size())
                 throw std::invalid_argument(std::format("Reshape missmatch [{}x{}] -> [{}x{}]", _rows, _cols, rows, cols));
             _rows = rows;
             _cols = cols;
-        }
-        
-        template<typename U>
-        Matrix<U> astype() const {
-            Matrix<U> result(_rows, _cols);
-            for (int i = 0; i < size(); i++)
-                result.at(i) = static_cast<U>(this->get(i));
-            return result;
         }
 
         Matrix<T> sub_matrix(std::size_t row_0, std::size_t row_1, std::size_t col_0, std::size_t col_1) const {
@@ -190,13 +191,21 @@ namespace ndarray {
             return result;
         }
 
+        void operator=(const Matrix<T>& matrix) noexcept {
+            if (matrix.size() != size()) {
+                BaseArray<T>::_data.release();
+                BaseArray<T>::_data = std::unique_ptr<T[]>(new T[matrix.size()]);
+            }
+            std::memcpy(BaseArray<T>::_data.get(), matrix.BaseArray<T>::_data.get(), matrix.size() * sizeof(T));
+            BaseArray<T>::_size = matrix.size();
+            _rows = matrix._rows;
+            _cols = matrix._cols;
+        }
+
 #pragma endregion CORE
-
-#pragma region DERIVED_OPS
-
-#pragma endregion DERIVED_OPS
         
 #pragma region REDUCE
+
         using BaseArray<T>::reduce_sum;
         using BaseArray<T>::reduce_prod;
         using BaseArray<T>::reduce_max;
@@ -218,7 +227,7 @@ namespace ndarray {
         }
         template<typename R>
         Matrix<R> reduce_cols(const std::function<R(const R&, const T&)>& lambda, const R& initializer) const {
-            Matrix<R> result(1, _cols);
+            Matrix<R> result(_rows, 1);
             result.fill(initializer);
             for (std::size_t row = 0; row < _rows; row++) {
                 for (std::size_t col = 0; col < _cols; col++) {
@@ -229,36 +238,44 @@ namespace ndarray {
             return result;
         }
         template<typename R>
-        Matrix<R> reduce(const std::function<R(const R&, const T&)>& lambda, Dim dim, const R& initializer) const {
-            if (dim == ROWS) {
+        Matrix<R> reduce(const std::function<R(const R&, const T&)>& lambda, std::size_t dim, const R& initializer) const {
+            if (this->size() == 0) {
+                throw std::logic_error("Cannot reduce zero-sized array");
+            }
+            if (dim == 0) {
                 return reduce_rows<R>(lambda, initializer);
             }
-            else {
+            else if (dim == 1) {
                 return reduce_cols<R>(lambda, initializer);
             }
+            else {
+                throw std::invalid_argument("Dim not valid for a Matrix type");
+            }
         }
-        Matrix<T> reduce_sum(Dim dim) const {
-            return reduce<T>([](const T& x0, const T& x1) -> T { return x0 + x1; }, dim, T(0));
+
+        Matrix<T> reduce_sum(MatrixDim dim) const {
+            return reduce<T>(BaseArray<T>::reduce_sum_t.lambda, dim, BaseArray<T>::reduce_sum_t.initializer);
         }
-        Matrix<T> reduce_prod(Dim dim) const {
-            return reduce<T>([](const T& x0, const T& x1) -> T { return x0 * x1; }, dim, T(1));
+        Matrix<T> reduce_prod(MatrixDim dim) const {
+            return reduce<T>(BaseArray<T>::reduce_prod_t.lambda, dim, BaseArray<T>::reduce_prod_t.initializer);
         }
-        Matrix<T> reduce_max(Dim dim) const {
-            return reduce<T>([](const T& x0, const T& x1) -> T { return x0 > x1 ? x0 : x1; }, dim, T(-INFINITY));
+        Matrix<T> reduce_max(MatrixDim dim) const {
+            return reduce<T>(BaseArray<T>::reduce_max_t.lambda, dim, BaseArray<T>::reduce_max_t.initializer);
         }
-        Matrix<T> reduce_min(Dim dim) const {
-            return reduce<T>([](const T& x0, const T& x1) -> T { return x0 < x1 ? x0 : x1; }, dim, T(INFINITY));
+        Matrix<T> reduce_min(MatrixDim dim) const {
+            return reduce<T>(BaseArray<T>::reduce_min_t.lambda, dim, BaseArray<T>::reduce_min_t.initializer);
         }
-        Matrix<bool> reduce_any(Dim dim) const {
-            return reduce<bool>([](const T& x0, const T& x1) -> T { return x0 || x1; }, dim, false);
+        Matrix<bool> reduce_any(MatrixDim dim) const {
+            return reduce<bool>(BaseArray<T>::reduce_any_t.lambda, dim, BaseArray<T>::reduce_any_t.initializer);
         }
-        Matrix<bool> reduce_all(Dim dim) const {
-            return reduce<bool>([](const T& x0, const T& x1) -> T { return x0 && x1; }, dim, true);
+        Matrix<bool> reduce_all(MatrixDim dim) const {
+            return reduce<bool>(BaseArray<T>::reduce_all_t.lambda, dim, BaseArray<T>::reduce_all_t.initializer);
         }
 
 #pragma endregion REDUCE
 
 #pragma region OTHER
+
         void swap_rows(size_t row1, size_t row2) {
             for (size_t col = 0; col < _cols; col++) {
                 std::swap(this->at(row1, col), this->at(row2, col));
@@ -320,14 +337,14 @@ namespace ndarray {
             std::size_t _ptr;
             std::size_t _row_start, _col_start, _row_end, _col_end;
             std::size_t _iter_rows, _iter_cols, _iter_size;
-            Dim _order;
+            MatrixDim _order;
         public:
             using difference_type = std::ptrdiff_t;
             using element_type = T;
             using pointer = element_type*;
             using reference = element_type&;
 
-            MatrixIterator(Matrix<T>* mat_ptr, Dim order, std::size_t ptr,
+            MatrixIterator(Matrix<T>* mat_ptr, MatrixDim order, std::size_t ptr,
                            std::size_t row_start, std::size_t row_end,
                            std::size_t col_start, std::size_t col_end)
                 : _mat_ptr(mat_ptr), _ptr(ptr), _row_start(row_start), _col_start(col_start), _row_end(row_end), _col_end(col_end), _order(order) {

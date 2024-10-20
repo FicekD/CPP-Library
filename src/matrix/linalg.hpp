@@ -70,7 +70,7 @@ namespace ndarray {
 		if (matrix.cols() != matrix.rows())
 			throw std::invalid_argument("Matrix has to be square");
 
-		Matrix<T> m(std::vector<Matrix<T>> { matrix, Matrix<T>::eye(matrix.rows()) }, COLS);
+		Matrix<T> m(std::vector<Matrix<T>> { matrix, Matrix<T>::eye(matrix.rows()) }, MatrixDim::COLS);
 
 		for (size_t col = 0; col < matrix.cols(); col++) {
 			if (m.at(col, col) == 0) {
@@ -79,7 +79,7 @@ namespace ndarray {
 					throw std::invalid_argument("Matrix is singular");
 				}
 				m.swap_rows(col, largest_row_idx);
-				// did I break previous pivot?
+				// TODO: did I break previous pivot?
 			}
 		}
 

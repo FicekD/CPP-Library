@@ -29,7 +29,7 @@ int main() {
     std::cout << std::endl;
 
     std::cout << x4.reduce_sum() << std::endl;
-    std::cout << x4.reduce_sum(COLS) << std::endl;
+    std::cout << x4.reduce_sum(MatrixDim::COLS) << std::endl;
 
     std::cout << Matrix<double>::eye(9, 1) << std::endl;
 
@@ -40,6 +40,16 @@ int main() {
     std::cout << x4.square() << std::endl;
     fn(x4);
     std::cout << x4 << std::endl;
+
+    Matrix<float> x6(5, 5);
+    std::cout << x6 << std::endl;
+    x6.fill(3);
+    x6 = x6.reduce_sum(MatrixDim::ROWS);
+    std::cout << x6 << std::endl;
+
+    Matrix<bool> x7(5, 5);
+    std::cout << x7 << std::endl;
+    std::cout << x7.reduce_any(MatrixDim::COLS) << std::endl;
 
     return 0;
 }

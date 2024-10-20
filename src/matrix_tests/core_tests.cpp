@@ -102,7 +102,7 @@ namespace core_tests
 			ndarray::Matrix<int> mat2(2, 7);
 			ndarray::Matrix<int> mat3(4, 7);
 
-			ndarray::Matrix<int> concatted(std::vector<ndarray::Matrix<int>> { mat1, mat2, mat3 }, ndarray::ROWS);
+			ndarray::Matrix<int> concatted(std::vector<ndarray::Matrix<int>> { mat1, mat2, mat3 }, ndarray::MatrixDim::ROWS);
 
 			Assert::AreEqual(mat1.rows() + mat2.rows() + mat3.rows(), concatted.rows());
 			Assert::AreEqual(mat1.cols(), concatted.cols());
