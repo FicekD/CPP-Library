@@ -12,7 +12,7 @@ using namespace generated_tests;
 namespace linalg_tests {
 	std::vector<ndarray::Matrix<double>> inputs;
 
-	TEST_CLASS(LinearAlgebra) {
+	TEST_CLASS(MatrixLinearAlgebra) {
 public:
 	TEST_CLASS_INITIALIZE(ReadGeneratedTestDefinitions)
 	{

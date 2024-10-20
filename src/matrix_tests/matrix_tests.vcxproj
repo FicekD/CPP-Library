@@ -25,7 +25,7 @@
     <RootNamespace>matrixtests</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <ProjectSubType>NativeUnitTestProject</ProjectSubType>
-    <ProjectName>matrix_tests</ProjectName>
+    <ProjectName>lib_tests</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -160,11 +160,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="arithmetic_tests.cpp" />
-    <ClCompile Include="bitwise_tests.cpp" />
-    <ClCompile Include="core_tests.cpp" />
+    <ClCompile Include="ndarray_math_tests.cpp" />
+    <ClCompile Include="ndarray_core_tests.cpp" />
     <ClCompile Include="generated_tests_io.hpp" />
-    <ClCompile Include="logical_tests.cpp" />
     <ClCompile Include="linalg_tests.cpp" />
   </ItemGroup>
   <ItemGroup>

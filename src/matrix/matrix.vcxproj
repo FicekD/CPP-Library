@@ -24,7 +24,7 @@
     <ProjectGuid>{8e1d2b04-bbc6-4aa9-a25a-62542c127ff4}</ProjectGuid>
     <RootNamespace>matrix</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>matrix</ProjectName>
+    <ProjectName>ndarray</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
