@@ -4,7 +4,7 @@
 #include <string>
 #include <fstream>
 
-#include "../matrix/matrix.hpp"
+#include "../ndarray/matrix.hpp"
 
 namespace generated_tests {
     const std::string tests_path("D:/ALL-IN/Programming/C++/cpp-lib/data/mat_unit_tests/");

@@ -1,7 +1,7 @@
 #include "CppUnitTest.h"
 
-#include "../matrix/matrix.hpp"
-#include "../matrix/linalg.hpp"
+#include "../ndarray/matrix.hpp"
+#include "../ndarray/linalg.hpp"
 
 #include "generated_tests_io.hpp"
 #include "general_tests.hpp"

@@ -1,6 +1,6 @@
 #include "CppUnitTest.h"
 
-#include "../matrix/matrix.hpp"
+#include "../ndarray/matrix.hpp"
 
 #include "generated_tests_io.hpp"
 #include "general_tests.hpp"

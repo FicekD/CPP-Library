@@ -1,6 +1,6 @@
 #include "CppUnitTest.h"
 
-#include "../matrix/matrix.hpp"
+#include "../ndarray/matrix.hpp"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 

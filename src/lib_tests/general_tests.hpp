@@ -3,9 +3,10 @@
 
 #include <vector>
 
-#include "generated_tests_io.hpp"
 #include "CppUnitTest.h"
-#include "../matrix/matrix.hpp"
+
+#include "generated_tests_io.hpp"
+#include "../ndarray/matrix.hpp"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
