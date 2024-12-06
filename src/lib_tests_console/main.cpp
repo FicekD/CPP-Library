@@ -1,8 +1,8 @@
 #include <iostream>
 
-#include "matrix.hpp"
-#include "linalg.hpp"
-#include "ndarray.hpp"
+#include "../ndarray/matrix.hpp"
+#include "../ndarray/linalg.hpp"
+#include "../ndarray/ndarray.hpp"
 
 using namespace ndarray;
 
