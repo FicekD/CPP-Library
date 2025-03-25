@@ -27,5 +27,13 @@
     <ClInclude Include="ndarray.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="range.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="range.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -107,9 +107,9 @@ namespace ndarray_core_tests
 			Assert::AreEqual(mat1.rows() + mat2.rows() + mat3.rows(), concatted.rows());
 			Assert::AreEqual(mat1.cols(), concatted.cols());
 
-			ndarray::Matrix<int> submat1 = concatted.sub_matrix(0, mat1.rows(), 0, mat1.cols());
-			ndarray::Matrix<int> submat2 = concatted.sub_matrix(mat1.rows(), mat1.rows() + mat2.rows(), 0, mat1.cols());
-			ndarray::Matrix<int> submat3 = concatted.sub_matrix(mat1.rows() + mat2.rows(), mat1.rows() + mat2.rows() + mat3.rows(), 0, mat1.cols());
+			ndarray::Matrix<int> submat1 = concatted.view(0, mat1.rows(), 0, mat1.cols());
+			ndarray::Matrix<int> submat2 = concatted.view(mat1.rows(), mat1.rows() + mat2.rows(), 0, mat1.cols());
+			ndarray::Matrix<int> submat3 = concatted.view(mat1.rows() + mat2.rows(), mat1.rows() + mat2.rows() + mat3.rows(), 0, mat1.cols());
 
 			Assert::IsTrue((mat1 == submat1).reduce_all());
 			Assert::IsTrue((mat2 == submat2).reduce_all());
@@ -125,9 +125,9 @@ namespace ndarray_core_tests
 			Assert::AreEqual(mat1.cols() + mat2.cols() + mat3.cols(), concatted.cols());
 			Assert::AreEqual(mat1.rows(), concatted.rows());
 
-			ndarray::Matrix<int> submat1 = concatted.sub_matrix(0, mat1.rows(), 0, mat1.cols());
-			ndarray::Matrix<int> submat2 = concatted.sub_matrix(0, mat1.rows(), mat1.cols(), mat1.cols() + mat2.cols());
-			ndarray::Matrix<int> submat3 = concatted.sub_matrix(0, mat1.rows(), mat1.cols() + mat2.cols(), mat1.cols() + mat2.cols() + mat3.cols());
+			ndarray::Matrix<int> submat1 = concatted.view(0, mat1.rows(), 0, mat1.cols());
+			ndarray::Matrix<int> submat2 = concatted.view(0, mat1.rows(), mat1.cols(), mat1.cols() + mat2.cols());
+			ndarray::Matrix<int> submat3 = concatted.view(0, mat1.rows(), mat1.cols() + mat2.cols(), mat1.cols() + mat2.cols() + mat3.cols());
 
 			Assert::IsTrue((mat1 == submat1).reduce_all());
 			Assert::IsTrue((mat2 == submat2).reduce_all());

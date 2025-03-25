@@ -108,8 +108,6 @@ namespace ndarray {
             return result;
         }
 
-#pragma region MATH_OPS
-
         container_t<T> operator+(const container_t<T>& obj) const {
             return add(obj);
         }
@@ -246,10 +244,6 @@ namespace ndarray {
             return map_to_new<T>([](const T& x1) -> T { return std::trunc(x1); });
         }
 
-#pragma endregion MATH_OPS
-
-#pragma region LOGICAL_OPS
-
         container_t<bool> operator<(const container_t<T>& obj) const {
             return less(obj);
         }
@@ -354,10 +348,6 @@ namespace ndarray {
             return map_to_new<bool>([](const T& x1) -> bool { return !x1; });
         }
 
-#pragma endregion LOGICAL_OPS
-
-#pragma region BITWISE_OPS
-
         container_t<T> operator|(const container_t<T>& obj) const {
             return bitwise_or(obj);
         }
@@ -401,8 +391,6 @@ namespace ndarray {
         container_t<T> bitwise_not() const {
             return map_to_new<T>([](const T& x) -> T { return ~x; });
         }
-
-#pragma endregion BITWISE_OPS
 
 	};
 }

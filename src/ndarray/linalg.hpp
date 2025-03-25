@@ -104,7 +104,7 @@ namespace ndarray {
 				m.at(row, col) = T(0);
 			}
 		}
-		Matrix<T> inverse = m.sub_matrix(0, m.rows(), matrix.cols(), m.cols());
+		Matrix<T> inverse = m.view(0, m.rows(), matrix.cols(), m.cols());
 		return inverse;
 	}
 

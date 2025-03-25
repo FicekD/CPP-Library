@@ -23,9 +23,10 @@ namespace ndarray {
 
 	template <typename T>
 	class BaseArray {
-	protected:
-		std::unique_ptr<T[]> _data = nullptr;
+    protected:
+		std::shared_ptr<T[]> _data = nullptr;
 		std::size_t _size = 0;
+        bool _is_view = false;
 
         const Reduce<T, T> reduce_sum_t{ [](const T& x0, const T& x1) -> T { return x0 + x1; }, T(0) };
         const Reduce<T, T> reduce_prod_t{ [](const T& x0, const T& x1) -> T { return x0 * x1; }, T(1) };
@@ -36,47 +37,63 @@ namespace ndarray {
 
 	public:
         BaseArray() {}
-		BaseArray(const BaseArray<T>& arr) noexcept : _size(arr._size) {
-			if (_size > 0) {
-				_data = std::unique_ptr<T[]>(new T[arr._size]);
-				std::memcpy(_data.get(), arr._data.get(), arr._size * sizeof(T));
+		BaseArray(const BaseArray<T>& arr) noexcept : _size(arr.size()) {
+			if (size() > 0) {
+				_data = std::shared_ptr<T[]>(new T[size()]);
+                if (arr.is_view()) {
+                    for (std::size_t i = 0; i < size(); i++) {
+                        ptr()[i] = arr.get(i);
+                    }
+                }
+                else {
+                    std::memcpy(ptr(), arr.ptr(), size() * sizeof(T));
+                }
 			}
 		}
-		BaseArray(BaseArray<T>&& arr) noexcept : _size(arr._size) {
+		BaseArray(BaseArray<T>&& arr) : _size(arr.size()) {
+            if (is_view())
+                throw std::logic_error("Cannot move a view");
 			_data = std::move(arr._data);
 			arr.clear();
 		}
 		BaseArray(std::size_t size) noexcept : _size(size) {
-			if (_size > 0)
-				_data = std::unique_ptr<T[]>(new T[_size]{ T() });
+			if (size > 0)
+				_data = std::shared_ptr<T[]>(new T[size]{ T() });
 		}
 
         virtual ~BaseArray() = default;
 
-		std::size_t size() const { return _size; }
+		virtual std::size_t size() const { return _size; }
+        T* ptr() const { return _data.get(); }
 
 		void clear() {
-			_data.release();
+            if (is_view()) {
+                throw std::domain_error("Cannot clear a view");
+            }
+			_data.reset();
 			_size = 0;
 		}
 		void fill(const T& scalar) {
-			for (std::size_t i = 0; i < _size; i++)
+			for (std::size_t i = 0; i < size(); i++)
 				this->at(i) = scalar;
 		}
-
-        bool empty() const {
-            return _data == nullptr || _size == 0;
+        bool is_view() const {
+            return _is_view;
         }
 
-		T get(std::size_t x) const {
-			if (x >= _size)
+        bool empty() const {
+            return _data == nullptr || size() == 0;
+        }
+
+		virtual T get(std::size_t x) const {
+			if (x >= size())
 				throw std::invalid_argument("Index out of bounds");
-			return _data.get()[x];
+			return ptr()[x];
 		}
-		T& at(std::size_t x) {
-			if (x >= _size)
+		virtual T& at(std::size_t x) {
+			if (x >= size())
 				throw std::invalid_argument("Index out of bounds");
-			return _data.get()[x];
+			return ptr()[x];
 		}
 
         static void _except_on_size_mismatch(std::size_t size1, std::size_t size2) {
@@ -84,14 +101,14 @@ namespace ndarray {
                 throw std::invalid_argument("Size mismatch");
         }
         void map_inplace(const std::function<T(const T&)>& lambda) {
-            for (int i = 0; i < _size; i++) {
+            for (int i = 0; i < size(); i++) {
                 T& ref = this->at(i);
                 ref = lambda(ref);
             }
         }
         void map_inplace(const std::function<T(const T&, const T&)>& lambda, const BaseArray<T>& arr) {
             BaseArray<T>::_except_on_size_mismatch(this->size(), arr.size());
-            for (int i = 0; i < _size; i++) {
+            for (int i = 0; i < size(); i++) {
                 T& ref = this->at(i);
                 ref = lambda(ref, arr.get(i));
             }
@@ -99,7 +116,7 @@ namespace ndarray {
         template <typename R = T>
         void map_to(const std::function<R(const T&)>& lambda, BaseArray<R>& target) const {
             BaseArray<T>::_except_on_size_mismatch(this->size(), target.size());
-            for (int i = 0; i < _size; i++) {
+            for (int i = 0; i < size(); i++) {
                 target.at(i) = lambda(this->get(i));
             }
         }
@@ -107,7 +124,7 @@ namespace ndarray {
         void map_to(const std::function<R(const T&, const T&)>& lambda, const BaseArray<T>& arr, BaseArray<R>& target) const {
             BaseArray<T>::_except_on_size_mismatch(this->size(), arr.size());
             BaseArray<T>::_except_on_size_mismatch(this->size(), target.size());
-            for (int i = 0; i < _size; i++) {
+            for (int i = 0; i < size(); i++) {
                 target.at(i) = lambda(this->get(i), arr.get(i));
             }
         }
@@ -295,22 +312,22 @@ namespace ndarray {
         }
 
         T reduce_sum() const {
-            return std::reduce(_data.get(), _data.get() + _size, reduce_sum_t.initializer, reduce_sum_t.lambda);
+            return std::reduce(ptr(), ptr() + size(), reduce_sum_t.initializer, reduce_sum_t.lambda);
         }
         T reduce_prod() const {
-            return std::reduce(_data.get(), _data.get() + _size, reduce_prod_t.initializer, reduce_prod_t.lambda);
+            return std::reduce(ptr(), ptr() + size(), reduce_prod_t.initializer, reduce_prod_t.lambda);
         }
         T reduce_max() const {
-            return std::reduce(_data.get(), _data.get() + _size, reduce_max_t.initializer, reduce_max_t.lambda);
+            return std::reduce(ptr(), ptr() + size(), reduce_max_t.initializer, reduce_max_t.lambda);
         }
         T reduce_min() const {
-            return std::reduce(_data.get(), _data.get() + _size, reduce_min_t.initializer, reduce_min_t.lambda);
+            return std::reduce(ptr(), ptr() + size(), reduce_min_t.initializer, reduce_min_t.lambda);
         }
         bool reduce_any() const {
-            return std::reduce(_data.get(), _data.get() + _size, reduce_any_t.initializer, reduce_any_t.lambda);
+            return std::reduce(ptr(), ptr() + size(), reduce_any_t.initializer, reduce_any_t.lambda);
         }
         bool reduce_all() const {
-            return std::reduce(_data.get(), _data.get() + _size, reduce_all_t.initializer, reduce_all_t.lambda);
+            return std::reduce(ptr(), ptr() + size(), reduce_all_t.initializer, reduce_all_t.lambda);
         }
 	};
 }
