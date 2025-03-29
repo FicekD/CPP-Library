@@ -4,7 +4,7 @@
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
-namespace ndarray_core_tests
+namespace matrix_core_tests
 {
 	TEST_CLASS(MatrixCore) {
 	public:
@@ -88,9 +88,13 @@ namespace ndarray_core_tests
 			
 			ndarray::Matrix<int> matrix_move = std::move(matrix_origin);
 
+#pragma warning(push)
+#pragma warning(disable: 26800)
 			Assert::AreEqual(std::size_t(0), matrix_origin.rows());
 			Assert::AreEqual(std::size_t(0), matrix_origin.cols());
 			Assert::AreEqual(std::size_t(0), matrix_origin.size());
+#pragma warning(pop)
+
 			Assert::AreEqual(rows, matrix_move.rows());
 			Assert::AreEqual(cols, matrix_move.cols());
 			Assert::AreEqual(rows * cols, matrix_move.size());
@@ -102,7 +106,11 @@ namespace ndarray_core_tests
 			ndarray::Matrix<int> mat2(2, 7);
 			ndarray::Matrix<int> mat3(4, 7);
 
-			ndarray::Matrix<int> concatted(std::vector<ndarray::Matrix<int>> { mat1, mat2, mat3 }, ndarray::MatrixDim::ROWS);
+			mat1.fill(1);
+			mat2.fill(2);
+			mat3.fill(3);
+
+			ndarray::Matrix<int> concatted(std::vector<const ndarray::Matrix<int>*> { &mat1, &mat2, &mat3 }, ndarray::MatrixDim::ROWS);
 
 			Assert::AreEqual(mat1.rows() + mat2.rows() + mat3.rows(), concatted.rows());
 			Assert::AreEqual(mat1.cols(), concatted.cols());
@@ -120,7 +128,11 @@ namespace ndarray_core_tests
 			ndarray::Matrix<int> mat2(7, 2);
 			ndarray::Matrix<int> mat3(7, 4);
 
-			ndarray::Matrix<int> concatted(std::vector<ndarray::Matrix<int>> { mat1, mat2, mat3 }, ndarray::COLS);
+			mat1.fill(1);
+			mat2.fill(2);
+			mat3.fill(3);
+
+			ndarray::Matrix<int> concatted(std::vector<const ndarray::Matrix<int>*> { &mat1, &mat2, &mat3 }, ndarray::COLS);
 
 			Assert::AreEqual(mat1.cols() + mat2.cols() + mat3.cols(), concatted.cols());
 			Assert::AreEqual(mat1.rows(), concatted.rows());
@@ -183,6 +195,46 @@ namespace ndarray_core_tests
 			matrix.fill(42);
 			for (int i = 0; i < matrix.size(); i++)
 				Assert::AreEqual(42, matrix.get(i));
+		}
+		TEST_METHOD(View) {
+			std::size_t dim = 10;
+			ndarray::Matrix<std::size_t> matrix = ndarray::Matrix<std::size_t>(dim, dim);
+			ndarray::Matrix<std::size_t> matrix_view = matrix.view(0, matrix.rows(), 0, matrix.cols());
+			for (std::size_t i = 0; i < dim - 1; i++) {
+				matrix_view = matrix_view.view(1, matrix_view.rows(), 1, matrix_view.cols());
+				matrix_view.fill(i + 1);
+			}
+			for (std::size_t row = 0; row < matrix.rows(); row++)
+				for (std::size_t col = 0; col < matrix.cols(); col++)
+					Assert::AreEqual(row < col ? row : col, matrix.get(row, col));
+
+			matrix.fill(0);
+			matrix_view = matrix.view(0, 2, matrix.rows(), 0, 1, matrix.cols());
+			matrix_view.fill(1);
+			matrix_view = matrix.view(1, 2, matrix.rows(), 0, 1, matrix.cols());
+			matrix_view.fill(2);
+
+			for (std::size_t row = 0; row < matrix.rows(); row++)
+				for (std::size_t col = 0; col < matrix.cols(); col++)
+					Assert::AreEqual(std::size_t(row % 2 ? 2 : 1), matrix.get(row, col));
+
+			matrix.fill(0);
+			matrix_view = matrix.view(0, 1, matrix.rows(), 0, 2, matrix.cols());
+			matrix_view.fill(1);
+			matrix_view = matrix.view(0, 1, matrix.rows(), 1, 2, matrix.cols());
+			matrix_view.fill(2);
+
+			for (std::size_t row = 0; row < matrix.rows(); row++)
+				for (std::size_t col = 0; col < matrix.cols(); col++)
+					Assert::AreEqual(std::size_t(col % 2 ? 2 : 1), matrix.get(row, col));
+
+			matrix.fill(0);
+			matrix_view = matrix.view(0, 2, matrix.rows(), 0, 2, matrix.cols());
+			matrix_view.fill(1);
+
+			for (std::size_t row = 0; row < matrix.rows(); row++)
+				for (std::size_t col = 0; col < matrix.cols(); col++)
+					Assert::AreEqual(std::size_t(row % 2 || col % 2 ? 0 : 1), matrix.get(row, col));
 		}
 	};
 }

@@ -69,8 +69,10 @@ namespace ndarray {
 	Matrix<T> inverse(const Matrix<T>& matrix) {
 		if (matrix.cols() != matrix.rows())
 			throw std::invalid_argument("Matrix has to be square");
-
-		Matrix<T> m(std::vector<Matrix<T>> { matrix, Matrix<T>::eye(matrix.rows()) }, MatrixDim::COLS);
+		
+		Matrix<T> eye = Matrix<T>::eye(matrix.rows());
+		std::vector<const Matrix<T>*> vec { &matrix, &eye };
+		Matrix<T> m(vec, MatrixDim::COLS);
 
 		for (size_t col = 0; col < matrix.cols(); col++) {
 			if (m.at(col, col) == 0) {

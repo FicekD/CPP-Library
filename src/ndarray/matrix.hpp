@@ -53,89 +53,72 @@ namespace ndarray {
     public:
         Matrix() {}
         Matrix(const Matrix<T>& matrix) noexcept : _total_rows(matrix.rows()), _total_cols(matrix.cols()), _rows(matrix.rows()), _cols(matrix.cols()), NDArray<Matrix, T>(matrix.size()) {
+            std::cout << "Copy" << std::endl;
             if (size() > 0) {
-                BaseArray<T>::_data = std::shared_ptr<T[]>(new T[matrix.size()]);
+                BaseArray<T>::_data = std::make_shared<T[]>(matrix.size());
                 copy_data(*this, matrix, matrix.size());
             }
         }
-        Matrix(Matrix<T>&& matrix) : _total_rows(matrix.rows()), _total_cols(matrix.cols()), _rows(matrix.rows()), _cols(matrix.cols()), NDArray<Matrix, T>() {
-            if (is_view())
-                throw std::logic_error("Cannot move a view");
-            BaseArray<T>::_size = matrix.size();
-            BaseArray<T>::_data = std::move(matrix.BaseArray<T>::_data);
+        Matrix(Matrix<T>&& matrix) noexcept : _total_rows(matrix._total_rows), _total_cols(matrix._total_cols), _rows(matrix.rows()), _cols(matrix.cols()),
+                                              _row_offset(matrix._row_offset), _row_stride(matrix._row_stride), _col_offset(matrix._col_offset), _col_stride(matrix._col_stride) {
+            std::cout << "Move" << std::endl;
+            BaseArray<T>::_size = matrix._size;
+            BaseArray<T>::_data = std::shared_ptr<T[]>(matrix._data);
             matrix.clear();
         }
-        Matrix(std::size_t rows, std::size_t cols) noexcept : _total_rows(rows), _total_cols(cols), _rows(rows), _cols(cols), NDArray<Matrix, T>(cols * rows) {
-            if (size() > 0)
-                BaseArray<T>::_data = std::shared_ptr<T[]>(new T[size()] { T() });
-        }
-        Matrix(const Shape& shape) noexcept : _total_rows(shape[0]), _total_cols(shape[1]), _rows(shape[0]), _cols(shape[1]), NDArray<Matrix, T>(shape[0] * shape[1]) {
-            if (size() > 0)
-                BaseArray<T>::_data = std::shared_ptr<T[]>(new T[size()]{ T() });
-        }
-        Matrix(std::size_t rows, std::size_t cols, std::shared_ptr<T[]> data) noexcept : _total_rows(rows), _total_cols(cols), _rows(rows), _cols(cols), NDArray<Matrix, T>(cols * rows) {
-            if (size() > 0)
-                BaseArray<T>::_data = std::shared_ptr<T[]>(data);
+        Matrix(std::size_t rows, std::size_t cols) noexcept : _total_rows(rows), _total_cols(cols), _rows(rows), _cols(cols), NDArray<Matrix, T>(cols * rows) {}
+        Matrix(const Shape& shape) noexcept : _total_rows(shape[0]), _total_cols(shape[1]), _rows(shape[0]), _cols(shape[1]), NDArray<Matrix, T>(shape[0] * shape[1]) {}
+        Matrix(std::size_t rows, std::size_t cols, std::shared_ptr<T[]> data) noexcept : _total_rows(rows), _total_cols(cols), _rows(rows), _cols(cols), NDArray<Matrix, T>() {
+            BaseArray<T>::_size = _total_rows * _total_cols;
+            BaseArray<T>::_data = std::shared_ptr<T[]>(data);
         }
         Matrix(std::size_t rows, std::size_t cols, T* data) noexcept : _total_rows(rows), _total_cols(cols), _rows(rows), _cols(cols), NDArray<Matrix, T>(cols * rows) {
-            if (size() > 0) {
-                BaseArray<T>::_data = std::shared_ptr<T[]>(new T[size()]);
-                std::memcpy(ptr(), data, size() * sizeof(T));
-            }
+            std::memcpy(ptr(), data, size() * sizeof(T));
         }
         Matrix(const Shape& shape, T* data) noexcept : _total_rows(shape[0]), _total_cols(shape[1]), _rows(shape[0]), _cols(shape[1]), NDArray<Matrix, T>(shape[0] * shape[1]) {
-            if (size() > 0) {
-                BaseArray<T>::_data = std::shared_ptr<T[]>(new T[size()]);
-                std::memcpy(ptr(), data, size() * sizeof(T));
-            }
+            std::memcpy(ptr(), data, size() * sizeof(T));
         }
         Matrix(std::size_t rows, std::size_t cols, const std::vector<T>& data) noexcept : _total_rows(rows), _total_cols(cols), _rows(rows), _cols(cols), NDArray<Matrix, T>(cols * rows) {
-            if (size() > 0) {
-                BaseArray<T>::_data = std::shared_ptr<T[]>(new T[size()]);
-                std::memcpy(ptr(), data.data(), size() * sizeof(T));
-            }
+            std::memcpy(ptr(), data.data(), size() * sizeof(T));
         }
         Matrix(const Shape& shape, const std::vector<T>& data) noexcept : _total_rows(shape[0]), _total_cols(shape[1]), _rows(shape[0]), _cols(shape[1]), NDArray<Matrix, T>(shape[0] * shape[1]) {
-            if (size() > 0) {
-                BaseArray<T>::_data = std::shared_ptr<T[]>(new T[size()]);
-                std::memcpy(ptr(), data.data(), size() * sizeof(T));
-            }
+            std::memcpy(ptr(), data.data(), size() * sizeof(T));
         }
-        Matrix(const std::vector<Matrix<T>>& matrices, MatrixDim concat_dim) {
+        Matrix(const std::vector<const Matrix<T>*>& matrices, MatrixDim concat_dim) {
             if (matrices.size() == 0)
                 throw std::invalid_argument("Empty matrix vector to concat");
             
             if (concat_dim == ROWS) {
-                _total_cols = matrices[0].cols();
+                _total_cols = matrices[0]->cols();
                 _total_rows = 0;
-                for (const Matrix<T>& mat : matrices) {
-                    if (mat.cols() != _total_cols)
+                for (const Matrix<T>* mat : matrices) {
+                    if (mat->cols() != _total_cols)
                         throw std::invalid_argument("Matrix column missmatch");
-                    _total_rows += mat.rows();
+                    _total_rows += mat->rows();
                 }
                 BaseArray<T>::_size = _total_rows * _total_cols;
-                BaseArray<T>::_data = std::shared_ptr<T[]>(new T[size()]);
+                BaseArray<T>::_data = std::make_shared<T[]>(BaseArray<T>::_size);
                 std::size_t ptr_i = 0;
-                for (const Matrix<T>& mat : matrices) {
-                    copy_data(*this, mat, mat.size(), ptr_i);
-                    ptr_i += mat.size();
+                for (const Matrix<T>* mat : matrices) {
+                    copy_data(*this, *mat, mat->size(), ptr_i);
+                    ptr_i += mat->size();
                 }
             }
             else {
                 _total_cols = 0;
-                _total_rows = matrices[0].rows();
-                for (const Matrix<T>& mat : matrices) {
-                    if (mat.rows() != _total_rows)
+                _total_rows = matrices[0]->rows();
+                for (const Matrix<T>* mat : matrices) {
+                    if (mat->rows() != _total_rows)
                         throw std::invalid_argument("Matrix row missmatch");
-                    _total_cols += mat.cols();
+                    _total_cols += mat->cols();
                 }
                 BaseArray<T>::_size = _total_rows * _total_cols;
-                BaseArray<T>::_data = std::shared_ptr<T[]>(new T[size()]);
+                BaseArray<T>::_data = std::make_shared<T[]>(BaseArray<T>::_size);
                 std::size_t ptr_i = 0;
                 for (std::size_t row = 0; row < _total_rows; row++) {
-                    for (const Matrix<T>& mat : matrices) {
-                        copy_data(*this, mat, mat.cols(), ptr_i, row * mat.cols());
-                        ptr_i += mat._total_cols;
+                    for (const Matrix<T>* mat : matrices) {
+                        copy_data(*this, *mat, mat->cols(), ptr_i, row * mat->cols());
+                        ptr_i += mat->cols();
                     }
                 }
             }
@@ -145,6 +128,25 @@ namespace ndarray {
 
         Matrix<T> copy() const {
             return Matrix<T>(*this);
+        }
+        void copy_to(Matrix<T>& matrix) const {
+            if (matrix.rows() != rows() || matrix.cols() != cols())
+                throw std::invalid_argument("Matrix shape missmatch");
+            copy_data(*this, matrix, matrix.size());
+        }
+        void operator=(const Matrix<T>& matrix) {
+            _total_rows = matrix._total_rows;
+            _total_cols = matrix._total_cols;
+
+            _row_stride = matrix._row_stride;
+            _col_stride = matrix._col_stride;
+            _row_offset = matrix._row_offset;
+            _col_offset = matrix._col_offset;
+            _rows = matrix._rows;
+            _cols = matrix._cols;
+
+            BaseArray<T>::_size = _total_rows * _total_cols;
+            BaseArray<T>::_data = std::shared_ptr<T[]>(matrix.BaseArray<T>::_data);
         }
 
         static Matrix<T> eye(std::size_t dim_size, int k = 0) {
@@ -260,39 +262,17 @@ namespace ndarray {
             }
         }
 
-        void operator=(const Matrix<T>& matrix) {
-            if (empty()) {
-                _total_rows = matrix._total_rows;
-                _total_cols = matrix._total_cols;
-
-                _row_stride = matrix._row_stride;
-                _col_stride = matrix._col_stride;
-                _row_offset = matrix._row_offset;
-                _col_offset = matrix._col_offset;
-                _rows = matrix._rows;
-                _cols = matrix._cols;
-
-                BaseArray<T>::_size = _total_rows * _total_cols;
-                BaseArray<T>::_data = std::shared_ptr<T[]>(matrix.BaseArray<T>::_data);
-            }
-            else {
-                if (matrix.rows() != rows() || matrix.cols() != cols())
-                    throw std::invalid_argument("Matrix shape missmatch");
-                copy_data(*this, matrix, matrix.size());
-            }
-        }
-
         Matrix<T> view(std::size_t row_start, std::size_t row_stride, std::size_t row_end, std::size_t col_start, std::size_t col_stride, std::size_t col_end) const {
-            Matrix<T> view_mat(_total_rows, _total_cols, view_mat._data);
+            Matrix<T> view_mat(_total_rows, _total_cols, BaseArray<T>::_data);
 
             view_mat._row_offset = _row_offset + _row_stride * row_start;
-            view_mat._col_offset = _col_offset + _col_stride * row_start;
+            view_mat._col_offset = _col_offset + _col_stride * col_start;
 
             view_mat._row_stride = _row_stride * row_stride;
             view_mat._col_stride = _col_stride * col_stride;
 
-            view_mat._rows = (row_end - row_start - 1) / row_stride;
-            view_mat._cols = (col_end - col_start - 1) / col_stride;
+            view_mat._rows = (row_end - row_start - 1) / row_stride + 1;
+            view_mat._cols = (col_end - col_start - 1) / col_stride + 1;
 
             return view_mat;
         }

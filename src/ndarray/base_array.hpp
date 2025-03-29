@@ -11,6 +11,7 @@
 #include <format>
 #include <algorithm>
 
+#include "random.hpp"
 
 namespace ndarray {
     constexpr double PI = 3.141592653589793238463;
@@ -39,7 +40,7 @@ namespace ndarray {
         BaseArray() {}
 		BaseArray(const BaseArray<T>& arr) noexcept : _size(arr.size()) {
 			if (size() > 0) {
-				_data = std::shared_ptr<T[]>(new T[size()]);
+				_data = std::make_shared<T[]>(size());
                 if (arr.is_view()) {
                     for (std::size_t i = 0; i < size(); i++) {
                         ptr()[i] = arr.get(i);
@@ -50,15 +51,13 @@ namespace ndarray {
                 }
 			}
 		}
-		BaseArray(BaseArray<T>&& arr) : _size(arr.size()) {
-            if (is_view())
-                throw std::logic_error("Cannot move a view");
-			_data = std::move(arr._data);
+		BaseArray(BaseArray<T>&& arr) noexcept : _size(arr._size) {
+			_data = std::shared_ptr<T[]>(arr._data);
 			arr.clear();
 		}
 		BaseArray(std::size_t size) noexcept : _size(size) {
 			if (size > 0)
-				_data = std::shared_ptr<T[]>(new T[size]{ T() });
+				_data = std::make_shared<T[]>(size);
 		}
 
         virtual ~BaseArray() = default;
@@ -67,9 +66,6 @@ namespace ndarray {
         T* ptr() const { return _data.get(); }
 
 		void clear() {
-            if (is_view()) {
-                throw std::domain_error("Cannot clear a view");
-            }
 			_data.reset();
 			_size = 0;
 		}
@@ -77,6 +73,18 @@ namespace ndarray {
 			for (std::size_t i = 0; i < size(); i++)
 				this->at(i) = scalar;
 		}
+        void fill_random_normal(double mean = 0.0, double std = 1.0) {
+            std::mt19937& generator = rng.generator();
+            std::normal_distribution<double> sampler = rng.normal_distribution_sampler(mean, std);
+            for (std::size_t i = 0; i < size(); i++)
+                this->at(i) = sampler(generator);
+        }
+        void fill_random_uniform(double min = 0.0, double max = 1.0) {
+            std::mt19937& generator = rng.generator();
+            std::normal_distribution<double> sampler = rng.uniform_distribution_sampler(min, max);
+            for (std::size_t i = 0; i < size(); i++)
+                this->at(i) = sampler(generator);
+        }
         bool is_view() const {
             return _is_view;
         }
@@ -86,12 +94,12 @@ namespace ndarray {
         }
 
 		virtual T get(std::size_t x) const {
-			if (x >= size())
+			if (x >= _size)
 				throw std::invalid_argument("Index out of bounds");
 			return ptr()[x];
 		}
 		virtual T& at(std::size_t x) {
-			if (x >= size())
+			if (x >= _size)
 				throw std::invalid_argument("Index out of bounds");
 			return ptr()[x];
 		}

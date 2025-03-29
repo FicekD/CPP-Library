@@ -164,7 +164,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ndarray_math_tests.cpp" />
-    <ClCompile Include="ndarray_core_tests.cpp" />
+    <ClCompile Include="matrix_core_tests.cpp" />
     <ClCompile Include="generated_tests_io.hpp" />
     <ClCompile Include="linalg_tests.cpp" />
   </ItemGroup>

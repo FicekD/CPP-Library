@@ -139,9 +139,11 @@
     <ClInclude Include="linalg.hpp" />
     <ClInclude Include="matrix.hpp" />
     <ClInclude Include="ndarray.hpp" />
+    <ClInclude Include="random.hpp" />
     <ClInclude Include="range.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="random.cpp" />
     <ClCompile Include="range.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

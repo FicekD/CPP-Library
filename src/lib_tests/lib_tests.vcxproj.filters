@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ndarray_core_tests.cpp">
+    <ClCompile Include="matrix_core_tests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ndarray_math_tests.cpp">
