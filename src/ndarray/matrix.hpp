@@ -269,8 +269,8 @@ namespace ndarray {
             view_mat._row_stride = _row_stride * row_stride;
             view_mat._col_stride = _col_stride * col_stride;
 
-            view_mat._rows = (row_end - row_start - 1) / row_stride + 1;
-            view_mat._cols = (col_end - col_start - 1) / col_stride + 1;
+            view_mat._rows = static_cast<std::size_t>(static_cast<double>(row_end - row_start - 1) / static_cast<double>(row_stride) + 1.0);
+            view_mat._cols = static_cast<std::size_t>(static_cast<double>(col_end - col_start - 1) / static_cast<double>(col_stride) + 1.0);
 
             return view_mat;
         }
