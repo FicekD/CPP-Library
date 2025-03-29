@@ -53,7 +53,6 @@ namespace ndarray {
     public:
         Matrix() {}
         Matrix(const Matrix<T>& matrix) noexcept : _total_rows(matrix.rows()), _total_cols(matrix.cols()), _rows(matrix.rows()), _cols(matrix.cols()), NDArray<Matrix, T>(matrix.size()) {
-            std::cout << "Copy" << std::endl;
             if (size() > 0) {
                 BaseArray<T>::_data = std::make_shared<T[]>(matrix.size());
                 copy_data(*this, matrix, matrix.size());
@@ -61,7 +60,6 @@ namespace ndarray {
         }
         Matrix(Matrix<T>&& matrix) noexcept : _total_rows(matrix._total_rows), _total_cols(matrix._total_cols), _rows(matrix.rows()), _cols(matrix.cols()),
                                               _row_offset(matrix._row_offset), _row_stride(matrix._row_stride), _col_offset(matrix._col_offset), _col_stride(matrix._col_stride) {
-            std::cout << "Move" << std::endl;
             BaseArray<T>::_size = matrix._size;
             BaseArray<T>::_data = std::shared_ptr<T[]>(matrix._data);
             matrix.clear();

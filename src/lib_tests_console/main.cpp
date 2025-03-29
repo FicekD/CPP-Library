@@ -8,7 +8,6 @@ using namespace ndarray;
 
 
 int main() {
-    /*
     Matrix<double> x0(0, 5);
     std::cout << x0.size() << std::endl;
     Matrix<double> x1(5, 5);
@@ -65,7 +64,6 @@ int main() {
         matrix_view.fill(i + 1);
     }
     std::cout << matrix << std::endl;
-    */
 
     ndarray::Matrix<int> mat1(7, 5);
     ndarray::Matrix<int> mat2(7, 2);
@@ -79,15 +77,12 @@ int main() {
     std::cout << mat2 << std::endl;
     std::cout << mat3 << std::endl;
 
-    std::cout << "Vector" << std::endl;
     std::vector<const ndarray::Matrix<int>*> mats { &mat1, &mat2, &mat3 };
 
-    std::cout << "Concat" << std::endl;
     ndarray::Matrix<int> concatted(mats, ndarray::COLS);
 
     std::cout << concatted << std::endl;
 
-    std::cout << "Submats" << std::endl;
     ndarray::Matrix<int> submat1 = concatted.view(0, mat1.rows(), 0, mat1.cols());
     std::cout << submat1 << std::endl;
     ndarray::Matrix<int> submat2 = concatted.view(0, mat1.rows(), mat1.cols(), mat1.cols() + mat2.cols());
