@@ -392,5 +392,8 @@ namespace ndarray {
             return map_to_new<T>([](const T& x) -> T { return ~x; });
         }
 
+        container_t<T> is_nan() const {
+            return map_to_new<T>([](const T& x) -> T { return x != x; });
+        }
 	};
 }

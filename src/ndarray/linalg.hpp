@@ -1,6 +1,8 @@
 #ifndef _LINALG_H
 #define _LINALG_H
 
+#include <numeric>
+
 #include "matrix.hpp"
 
 namespace ndarray {
@@ -15,7 +17,7 @@ namespace ndarray {
 			for (std::size_t col = 0; col < matrix_2.cols(); col++) {
 				T sum = T(0);
 				for (std::size_t i = 0; i < matrix_1.cols(); i++) {
-					sum += matrix_1.get(row, i) * matrix_2.get(i, col);
+					sum = std::fma(matrix_1.get(row, i), matrix_2.get(i, col), sum);
 				}
 				result.at(row, col) = sum;
 			}
@@ -36,17 +38,17 @@ namespace ndarray {
 
 	namespace _inv {
 		template <typename T>
-		void multiply_row(Matrix<T>& matrix, size_t row, T multiplier) {
-			for (size_t col = 0; col < matrix.cols(); col++) {
+		void multiply_row(Matrix<T>& matrix, std::size_t row, T multiplier) {
+			for (std::size_t col = 0; col < matrix.cols(); col++) {
 				T& ref = matrix.at(row, col);
 				ref = ref * multiplier;
 			}
 		}
 
 		template <typename T>
-		size_t find_largest_abs_row_at_col(const Matrix<T>& matrix, size_t col) {
-			std::pair<size_t, T> largest(col, T(0));
-			for (size_t row = 0; row < matrix.rows(); row++) {
+		std::size_t find_largest_abs_row_at_col(const Matrix<T>& matrix, std::size_t col) {
+			std::pair<std::size_t, T> largest(col, T(0));
+			for (std::size_t row = 0; row < matrix.rows(); row++) {
 				T value = std::abs(matrix.get(row, col));
 				if (value > largest.second) {
 					largest.first = row;
@@ -57,10 +59,10 @@ namespace ndarray {
 		}
 
 		template <typename T>
-		void subtract_multiplied_row(Matrix<T>& matrix, size_t target_row, size_t source_row, T multiplier) {
-			for (size_t col = 0; col < matrix.cols(); col++) {
+		void subtract_multiplied_row(Matrix<T>& matrix, std::size_t target_row, std::size_t source_row, T multiplier) {
+			for (std::size_t col = 0; col < matrix.cols(); col++) {
 				T& ref = matrix.at(target_row, col);
-				ref = ref - multiplier * matrix.at(source_row, col);
+				ref = std::fma(-multiplier, matrix.get(source_row, col), ref);
 			}
 		}
 	}
@@ -74,9 +76,9 @@ namespace ndarray {
 		std::vector<const Matrix<T>*> vec { &matrix, &eye };
 		Matrix<T> m(vec, MatrixDim::COLS);
 
-		for (size_t col = 0; col < matrix.cols(); col++) {
+		for (std::size_t col = 0; col < matrix.cols(); col++) {
 			if (m.at(col, col) == 0) {
-				size_t largest_row_idx = _inv::find_largest_abs_row_at_col(m, col);
+				std::size_t largest_row_idx = _inv::find_largest_abs_row_at_col(m, col);
 				if (largest_row_idx == col) {
 					throw std::invalid_argument("Matrix is singular");
 				}
@@ -85,22 +87,22 @@ namespace ndarray {
 			}
 		}
 
-		for (size_t col = 0; col < matrix.cols() - 1; col++) {
-			for (size_t row = col + 1; row < matrix.rows(); row++) {
+		for (std::size_t col = 0; col < matrix.cols() - 1; col++) {
+			for (std::size_t row = col + 1; row < matrix.rows(); row++) {
 				T k = m.get(row, col) / matrix.get(col, col);
 				_inv::subtract_multiplied_row(m, row, col, k);
 				m.at(row, col) = T(0);
 			}
 		}
 
-		for (size_t row = 0; row < m.rows(); row++) {
+		for (std::size_t row = 0; row < m.rows(); row++) {
 			T multiplier = 1.0 / m.get(row, row);
 			_inv::multiply_row(m, row, multiplier);
 			m.at(row, row) = T(0);
 		}
 
-		for (size_t row = 0; row < m.rows(); row++) {
-			for (size_t col = row + 1; col < matrix.cols(); col++) {
+		for (std::size_t row = 0; row < m.rows(); row++) {
+			for (std::size_t col = row + 1; col < matrix.cols(); col++) {
 				T multiplier = m.get(row, col);
 				_inv::subtract_multiplied_row(m, row, col, multiplier);
 				m.at(row, col) = T(0);
@@ -126,19 +128,20 @@ namespace ndarray {
 			throw std::invalid_argument("Matrix has to be square");
 
 		Matrix<T> result(matrix.rows(), matrix.rows());
-		for (int j = 0; j < matrix.rows(); j++) {
+		for (std::size_t j = 0; j < matrix.rows(); j++) {
 			T sum = T(0);
-			for (int k = 0; k < j; k++) {
-				sum += result.get(j, k) * result.get(j, k);
+			for (std::size_t k = 0; k < j; k++) {
+				sum = std::fma(result.get(j, k), result.get(j, k), sum);
 			}
-			result.at(j, j) = std::sqrt(matrix.get(j, j) - sum);
+			T diagonal_value = std::sqrt(matrix.get(j, j) - sum);
+			result.at(j, j) = diagonal_value;
 
-			for (int i = j + 1; i < matrix.rows(); i++) {
+			for (std::size_t i = j + 1; i < matrix.rows(); i++) {
 				sum = T(0);
-				for (int k = 0; k < j; k++) {
-					sum += result.get(i, k) * result.get(j, k);
+				for (std::size_t k = 0; k < j; k++) {
+					sum = std::fma(result.get(i, k), result.get(j, k), sum);
 				}
-				result.at(i, j) = (1.0 / result.get(j, j) * (matrix.get(i, j) - sum));
+				result.at(i, j) = ((matrix.get(i, j) - sum) / diagonal_value);
 			}
 		}
 		return result;

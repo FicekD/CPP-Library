@@ -319,6 +319,10 @@ namespace ndarray {
             map_inplace([](const T& x) -> T { return ~x; });
         }
 
+        void is_nan_inplace() {
+            map_inplace([](const T& x) -> T { return x != x; });
+        }
+
         T reduce_sum() const {
             return std::reduce(ptr(), ptr() + size(), reduce_sum_t.initializer, reduce_sum_t.lambda);
         }
