@@ -69,6 +69,16 @@ public:
 		read_outputs(tests_path + "LinearAlgebra/svd-v.bin", outputs);
 		run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double>& m1) { return std::get<2>(ndarray::svd(m1)); }, true);
 	}
+	TEST_METHOD(LU_L) {
+		std::vector<TestOutput<double>> outputs;
+		read_outputs(tests_path + "LinearAlgebra/lu-l.bin", outputs);
+		run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double>& m1) { return std::get<0>(ndarray::lu(m1)); }, true);
+	}
+	TEST_METHOD(LU_U) {
+		std::vector<TestOutput<double>> outputs;
+		read_outputs(tests_path + "LinearAlgebra/lu-u.bin", outputs);
+		run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double>& m1) { return std::get<1>(ndarray::lu(m1)); }, true);
+	}
 	TEST_METHOD(Rank) {
 		std::vector<TestOutput<double>> outputs;
 		read_outputs(tests_path + "LinearAlgebra/rank.bin", outputs);
@@ -82,7 +92,7 @@ public:
 	TEST_METHOD(Trace) {
 		std::vector<TestOutput<double>> outputs;
 		read_outputs(tests_path + "LinearAlgebra/trace.bin", outputs);
-		run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double>& m1) { return ndarray::Matrix<double>(1, 1, { ndarray::trace(m1) }); });
+		run_generated_test<double>(inputs, outputs, [](const ndarray::Matrix<double>& m1) { return ndarray::Matrix<double>(1, 1, { ndarray::trace(m1) }); }, true);
 	}
 	};
 }

@@ -14,19 +14,15 @@ int main() {
     std::vector<generated_tests::TestOutput<double>> outputs;
 
     generated_tests::read_inputs(generated_tests::tests_path + "inputs.bin", inputs);
-    generated_tests::read_outputs(generated_tests::tests_path + "LinearAlgebra/cholesky.bin", outputs);
+    generated_tests::read_outputs(generated_tests::tests_path + "LinearAlgebra/trace.bin", outputs);
 
-    int i = 937;
+    int i = 20;
     Matrix<double>& m1 = inputs[outputs[i].input_indices[0]];
-    Matrix<double>& reference = outputs[i].output;
+    double reference = outputs[i].output.get(0, 0);
 
-    Matrix<double> result = ndarray::cholesky(m1);
+    double result = ndarray::trace(m1);
 
-    Matrix<bool> eq = reference == result;
-    Matrix<double> rel_err = (reference - result) / reference;
-
-    double max_rel_err = 1e-6;
-    std::cout << m1 << std::endl << reference << std::endl << result << std::endl << eq << std::endl << rel_err << std::endl << (rel_err.abs() < max_rel_err) << std::endl << ((rel_err.abs() < max_rel_err) || (reference == result)) << std::endl << ((rel_err.abs() < max_rel_err) || (reference == result)).reduce_all() << std::endl;
+    std::cout << m1 << std::endl << reference << std::endl << result << std::endl << (reference - result) << std::endl;
 
     return 0;
 }

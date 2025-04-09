@@ -153,6 +153,11 @@ namespace ndarray {
 	}
 
 	template <typename T>
+	std::tuple<Matrix<T>, Matrix<T>> lu(const Matrix<T>& matrix) {
+		throw std::logic_error("Not implemented");
+	}
+
+	template <typename T>
 	std::size_t rank(const Matrix<T>& matrix) {
 		throw std::logic_error("Not implemented");
 	}
@@ -164,7 +169,38 @@ namespace ndarray {
 
 	template <typename T>
 	T trace(const Matrix<T>& matrix, int k = 0) {
-		throw std::logic_error("Not implemented");
+		std::size_t dim_size = matrix.rows() < matrix.cols() ? matrix.rows() : matrix.cols();
+		size_t abs_k = std::abs(k);
+		if (abs_k > dim_size)
+			throw std::invalid_argument("k out of matrix dimensions");
+		T sum = T(0);
+		if (k >= 0)
+			for (size_t i = 0; i < dim_size - abs_k; i++) {
+				sum += matrix.get(i, i + abs_k);
+			}
+		else
+			for (size_t i = 0; i < dim_size - abs_k; i++) {
+				sum += matrix.get(i + abs_k, i);
+			}
+		return sum;
+	}
+
+	template <typename T>
+	T diagonal_product(const Matrix<T>& matrix, int k = 0) {
+		std::size_t dim_size = matrix.rows() < matrix.cols() ? matrix.rows() : matrix.cols();
+		size_t abs_k = std::abs(k);
+		if (abs_k > dim_size)
+			throw std::invalid_argument("k out of matrix dimensions");
+		T prod = T(1);
+		if (k >= 0)
+			for (size_t i = 0; i < dim_size - abs_k; i++) {
+				prod *= matrix.get(i, i + abs_k);
+			}
+		else
+			for (size_t i = 0; i < dim_size - abs_k; i++) {
+				prod *= matrix.get(i + abs_k, i);
+			}
+		return prod;
 	}
 }
 

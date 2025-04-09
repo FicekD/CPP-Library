@@ -268,6 +268,16 @@
             <PythonCall>lambda _x: np.linalg.svd(_x)[2]</PythonCall>
         </Test>
         <Test>
+            <Name>LU-L</Name>
+            <Unary>True</Unary>
+            <PythonCall>lambda _x: scipy.linalg.lu(_x, permute_l=True)[0]</PythonCall>
+        </Test>
+        <Test>
+            <Name>LU-U</Name>
+            <Unary>True</Unary>
+            <PythonCall>lambda _x: scipy.linalg.lu(_x, permute_l=True)[1]</PythonCall>
+        </Test>
+        <Test>
             <Name>Rank</Name>
             <Unary>True</Unary>
             <PythonCall>np.linalg.matrix_rank</PythonCall>
