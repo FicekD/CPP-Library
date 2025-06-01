@@ -8,11 +8,11 @@ std::mt19937& RandomGenerator::generator() {
 }
 
 std::normal_distribution<double> RandomGenerator::normal_distribution_sampler(double mean, double std) const {
-    return std::normal_distribution(mean, std);
+    return std::normal_distribution<double>(mean, std);
 }
 
 std::uniform_real_distribution<double> RandomGenerator::uniform_distribution_sampler(double min, double max) const {
-    return std::uniform_real_distribution(min, max);
+    return std::uniform_real_distribution<double>(min, max);
 }
 
 int RandomGenerator::seed() const {

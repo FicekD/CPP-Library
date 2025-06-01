@@ -1,14 +1,12 @@
 #ifndef _GENERAL_TESTS_H
 #define _GENERAL_TESTS_H
 
-#include <vector>
+#include <catch2/catch_test_macros.hpp>
 
-#include "CppUnitTest.h"
+#include <vector>
 
 #include "generated_tests_io.hpp"
 #include "../ndarray/matrix.hpp"
-
-using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 
 namespace generated_tests {
@@ -33,9 +31,9 @@ namespace generated_tests {
         return (eq || (rel_error < max_delta_rel)).reduce_all();
     }
 
-    static std::wstring get_err_msg(int i) {
+    static std::string get_err_msg(int i) {
         std::string s = "Failed on test case " + std::to_string(i);
-        return std::wstring(s.begin(), s.end());
+        return s;
     }
 
     template <typename T>
@@ -49,10 +47,11 @@ namespace generated_tests {
             const ndarray::Matrix<T>& input = inputs[outputs[i].input_indices[0]];
             const ndarray::Matrix<T>& result = operation(input);
 
+            INFO(get_err_msg(i));
             if (use_relative_erorr)
-                Assert::IsTrue(eval_results_rel_error(result, outputs[i].output), (wchar_t*)get_err_msg(i).c_str());
+                REQUIRE(eval_results_rel_error(result, outputs[i].output));
             else
-                Assert::IsTrue(eval_results_abs_error(result, outputs[i].output), (wchar_t*)get_err_msg(i).c_str());
+                REQUIRE(eval_results_abs_error(result, outputs[i].output));
         }
     }
 
@@ -68,10 +67,11 @@ namespace generated_tests {
             const ndarray::Matrix<T>& input_2 = inputs[outputs[i].input_indices[1]];
             ndarray::Matrix<T> result = operation(input_1, input_2);
 
+            INFO(get_err_msg(i));
             if (use_relative_erorr)
-                Assert::IsTrue(eval_results_rel_error(result, outputs[i].output), (wchar_t*)get_err_msg(i).c_str());
+                REQUIRE(eval_results_rel_error(result, outputs[i].output));
             else
-                Assert::IsTrue(eval_results_abs_error(result, outputs[i].output), (wchar_t*)get_err_msg(i).c_str());
+                REQUIRE(eval_results_abs_error(result, outputs[i].output));
         }
     }
 
@@ -87,10 +87,11 @@ namespace generated_tests {
             ndarray::Matrix<T> mutable_input(input);
             operation(mutable_input);
 
+            INFO(get_err_msg(i));
             if (use_relative_erorr)
-                Assert::IsTrue(eval_results_rel_error(mutable_input, outputs[i].output), (wchar_t*)get_err_msg(i).c_str());
+                REQUIRE(eval_results_rel_error(mutable_input, outputs[i].output));
             else
-                Assert::IsTrue(eval_results_abs_error(mutable_input, outputs[i].output), (wchar_t*)get_err_msg(i).c_str());
+                REQUIRE(eval_results_abs_error(mutable_input, outputs[i].output));
         }
     }
 
@@ -107,10 +108,11 @@ namespace generated_tests {
             const ndarray::Matrix<T>& input_2 = inputs[outputs[i].input_indices[1]];
             operation(input_1_mutable, input_2);
 
+            INFO(get_err_msg(i));
             if (use_relative_erorr)
-                Assert::IsTrue(eval_results_rel_error(input_1_mutable, outputs[i].output), (wchar_t*)get_err_msg(i).c_str());
+                REQUIRE(eval_results_rel_error(input_1_mutable, outputs[i].output));
             else
-                Assert::IsTrue(eval_results_abs_error(input_1_mutable, outputs[i].output), (wchar_t*)get_err_msg(i).c_str());
+                REQUIRE(eval_results_abs_error(input_1_mutable, outputs[i].output));
         }
     }
 }

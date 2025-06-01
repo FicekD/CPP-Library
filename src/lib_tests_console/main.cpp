@@ -4,7 +4,7 @@
 #include "../ndarray/linalg.hpp"
 #include "../ndarray/ndarray.hpp"
 
-#include "../lib_tests/generated_tests_io.hpp"
+#include "../ndarray_tests/generated_tests_io.hpp"
 
 using namespace ndarray;
 
